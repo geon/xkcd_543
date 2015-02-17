@@ -1,0 +1,188 @@
+<!DOCTYPE html5>
+<html>
+	<head>
+		<title>XKCD 543 - Sierpinski Valentine</title>
+		<style>
+			* {
+				width: 100%;
+				height: 100%;
+				margin: 0;
+				padding: 0;
+			}
+			body{
+				padding: 50px;
+				box-sizing: border-box;
+			}
+		</style>
+	</head>
+	<body>
+		<canvas id="canvas"></canvas>
+	</body>
+	<script type="text/javascript">
+
+		"use strict";
+
+		function vAdd (any_number_of_vectors) {
+
+			var result = [0, 0];
+
+			for (var i = 0; i < arguments.length; i++) {
+
+				result[0] += arguments[i][0];
+				result[1] += arguments[i][1];
+			}
+
+			return result;
+		}
+
+		function vSub (a, b) {
+
+			return [a[0] - b[0], a[1] - b[1]];
+		}
+
+		function vsMul (v, s) {
+
+			return [v[0] * s, v[1] * s];
+		}
+
+		function barycentricToCartesian (triangle, b) {
+
+			return vAdd(
+				vsMul(triangle[0], b[0]),
+				vsMul(triangle[1], b[1]),
+				vsMul(triangle[2], b[2])
+			);
+		}
+
+		function flatten (arrayOfArrays) {
+
+			return arrayOfArrays.reduce(function (soFar, current) {
+
+				return soFar.concat(current);
+
+			}, []);
+		}
+
+		function mirrorBarycentric (b) {
+
+			return [b[0], b[2], b[1]];
+		}
+
+		var canvas = document.getElementById('canvas');
+		var ctx = canvas.getContext('2d');
+
+		var pixelDensity = window.devicePixelRatio;
+		var lineWidth = 2 * pixelDensity;
+		var canvasSize = [
+			canvas.clientWidth  * pixelDensity,
+			canvas.clientHeight * pixelDensity
+		];
+		canvas.setAttribute('width',  canvasSize[0]);
+		canvas.setAttribute('height', canvasSize[1]);
+
+		ctx.strokeStyle = "red";
+
+		var triangleHeightFactor = Math.sqrt(.75);
+		var triangleSize = [
+			Math.min(canvasSize[0], canvasSize[1] / triangleHeightFactor) - 2 * lineWidth,
+			Math.min(canvasSize[1], canvasSize[0] * triangleHeightFactor) - 2 * lineWidth
+		];
+		var margin = vsMul(vSub(canvasSize, triangleSize), 1/2);
+		var triangle = [
+			vAdd(margin, [triangleSize[0]/2, 0              ]),
+			vAdd(margin, [triangleSize[0]  , triangleSize[1]]),
+			vAdd(margin, [0                , triangleSize[1]])
+		];
+
+
+		ctx.beginPath();
+		ctx.lineWidth = lineWidth;
+		ctx.moveTo.apply(ctx, triangle[0]);
+		triangle.slice(1).forEach(function (coord) {
+			ctx.lineTo.apply(ctx, coord);
+		});
+		ctx.lineTo.apply(ctx, triangle[0]);
+		ctx.stroke();
+
+
+		var heartRightUpper = [
+			[
+				1/2,
+				1/4,
+				1/4
+			],
+			[
+				13/20,
+				5/20,
+				2/20
+			],
+			[
+				6/10,
+				4/10,
+				0
+			],
+			[
+				1/2,
+				1/2,
+				0
+			],
+		];
+
+		var heartRightLower = [
+			[
+				1/2,
+				1/2,
+				0
+			],
+			[
+				4/10,
+				6/10,
+				0
+			],
+			[
+				3/16,
+				10/16,
+				3/16
+			],
+			[
+				0,
+				1/2,
+				1/2
+			]
+		];
+
+
+		var heartBarycentricBezier = [
+			heartRightUpper,
+			heartRightLower,
+			heartRightLower.map(mirrorBarycentric),
+			heartRightUpper.map(mirrorBarycentric)
+		];
+
+		// ctx.beginPath();
+		// ctx.moveTo.apply(ctx, triangle[0]);
+		// ctx.bezierCurveTo(75,37, 70,25, 50,25);
+		// ctx.stroke();
+
+
+		var heartCartesianBezier = heartBarycentricBezier.map(function (bezier) {
+
+			return bezier.map(function (b) {
+
+				return barycentricToCartesian (triangle, b);
+			});
+		});
+
+		ctx.beginPath();
+		ctx.lineWidth = lineWidth;
+		heartCartesianBezier.forEach(function (bezier) {
+
+			ctx.moveTo.apply(ctx, bezier[0]);
+			ctx.bezierCurveTo.apply(ctx, flatten(bezier.slice(1)));
+		});
+		ctx.stroke();
+
+
+
+	</script>
+</html>
