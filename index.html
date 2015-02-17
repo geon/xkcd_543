@@ -45,13 +45,24 @@
 			return [v[0] * s, v[1] * s];
 		}
 
-		function barycentricToCartesian (triangle, b) {
+		function coordBarycentricToCartesian (triangle, b) {
 
 			return vAdd(
 				vsMul(triangle[0], b[0]),
 				vsMul(triangle[1], b[1]),
 				vsMul(triangle[2], b[2])
 			);
+		}
+
+		function pathBarycentricToCartesian (triangle, path) {
+
+			return path.map(function (bezier) {
+
+				return bezier.map(function (b) {
+
+					return coordBarycentricToCartesian(triangle, b);
+				});
+			});			
 		}
 
 		function flatten (arrayOfArrays) {
@@ -103,6 +114,21 @@
 		});
 		ctx.lineTo.apply(ctx, triangle[0]);
 		ctx.stroke();
+
+
+		var bezierBaseTriangleBarycentric = [
+			// [1, 0, 0],
+			[-1, 1, 1],
+			[2/3, 1/3 , 0],
+			[1/3, 2/3 , 0],
+			[0, 1 , 0],
+			[0, 2/3 , 1/3],
+			[0, 1/3 , 2/3],
+			[0, 0 , 1],
+			[1/3, 0 , 2/3],
+			[2/3, 0 , 1/3]
+		]
+
 
 
 		var heartRightUpper = [
@@ -159,29 +185,106 @@
 			heartRightUpper.map(mirrorBarycentric)
 		];
 
-		// ctx.beginPath();
-		// ctx.moveTo.apply(ctx, triangle[0]);
-		// ctx.bezierCurveTo(75,37, 70,25, 50,25);
-		// ctx.stroke();
 
 
-		var heartCartesianBezier = heartBarycentricBezier.map(function (bezier) {
+		drawPath(transformPathByTriangle(bezierBaseTriangleBarycentric, heartBarycentricBezier));
 
-			return bezier.map(function (b) {
 
-				return barycentricToCartesian (triangle, b);
+		function drawPath (path) {
+
+			ctx.beginPath();
+			ctx.lineWidth = lineWidth;
+			pathBarycentricToCartesian(triangle, path).forEach(function (bezier) {
+
+				ctx.moveTo.apply(ctx, bezier[0]);
+				ctx.bezierCurveTo.apply(ctx, flatten(bezier.slice(1)));
 			});
-		});
+			ctx.stroke();
+		}
 
-		ctx.beginPath();
-		ctx.lineWidth = lineWidth;
-		heartCartesianBezier.forEach(function (bezier) {
 
-			ctx.moveTo.apply(ctx, bezier[0]);
-			ctx.bezierCurveTo.apply(ctx, flatten(bezier.slice(1)));
-		});
-		ctx.stroke();
+		function transformPathByTriangle (triangle, path) {
 
+			return path.map(function (bezier) {
+
+				return bezier.map(function (b) {
+
+					return evaluateBezierTriangle(triangle, b);
+				});
+			});			
+		}
+
+		function evaluateBezierTriangle (triangle, b) {
+
+			var center = bAvg(
+				triangle[1],
+				triangle[2],
+				triangle[4],
+				triangle[5],
+				triangle[7],
+				triangle[8]
+			);
+
+			var subTriangles = [
+				[triangle[0], triangle[1], triangle[8]],
+				[triangle[1], triangle[2], center     ],
+				[triangle[2], triangle[3], triangle[4]],
+				[center     , triangle[4], triangle[5]],
+				[triangle[7], triangle[5], triangle[6]],
+				[triangle[8], center     , triangle[7]]
+			];
+
+			return evaluateBarycentricTriangle([
+				evaluateBarycentricTriangle([
+					evaluateBarycentricTriangle(subTriangles[0], b),
+					evaluateBarycentricTriangle(subTriangles[1], b),
+					evaluateBarycentricTriangle(subTriangles[5], b)
+				], b),
+				evaluateBarycentricTriangle([
+					evaluateBarycentricTriangle(subTriangles[1], b),
+					evaluateBarycentricTriangle(subTriangles[2], b),
+					evaluateBarycentricTriangle(subTriangles[3], b)
+				], b),
+				evaluateBarycentricTriangle([
+					evaluateBarycentricTriangle(subTriangles[5], b),
+					evaluateBarycentricTriangle(subTriangles[3], b),
+					evaluateBarycentricTriangle(subTriangles[4], b)
+				], b)
+			], b);
+		}
+
+		function bAvg (any_number_of_coords) {
+
+			var result = [0, 0, 0];
+
+			for (var i = 0; i < arguments.length; i++) {
+
+				result[0] += arguments[i][0];
+				result[1] += arguments[i][1];
+				result[2] += arguments[i][2];
+			};
+
+			result[0] /= arguments.length;
+			result[1] /= arguments.length;
+			result[2] /= arguments.length;
+
+			return result;
+		}
+
+		function evaluateBarycentricTriangle (triangle, b) {
+
+			return [
+				triangle[0][0] * b[0] +
+				triangle[1][0] * b[1] +
+				triangle[2][0] * b[2],
+				triangle[0][1] * b[0] +
+				triangle[1][1] * b[1] +
+				triangle[2][1] * b[2],
+				triangle[0][2] * b[0] +
+				triangle[1][2] * b[1] +
+				triangle[2][2] * b[2]
+			];
+		}
 
 
 	</script>
