@@ -91,7 +91,6 @@
 		canvas.setAttribute('width',  canvasSize[0]);
 		canvas.setAttribute('height', canvasSize[1]);
 
-		ctx.strokeStyle = "red";
 
 		var triangleHeightFactor = Math.sqrt(.75);
 		var triangleSize = [
@@ -99,36 +98,90 @@
 			Math.min(canvasSize[1], canvasSize[0] * triangleHeightFactor) - 2 * lineWidth
 		];
 		var margin = vsMul(vSub(canvasSize, triangleSize), 1/2);
-		var triangle = [
+		var baseTriangleCartesian = [
 			vAdd(margin, [triangleSize[0]/2, 0              ]),
 			vAdd(margin, [triangleSize[0]  , triangleSize[1]]),
 			vAdd(margin, [0                , triangleSize[1]])
 		];
 
 
-		ctx.beginPath();
-		ctx.lineWidth = lineWidth;
-		ctx.moveTo.apply(ctx, triangle[0]);
-		triangle.slice(1).forEach(function (coord) {
-			ctx.lineTo.apply(ctx, coord);
-		});
-		ctx.lineTo.apply(ctx, triangle[0]);
-		ctx.stroke();
+		// ctx.beginPath();
+		// ctx.lineWidth = lineWidth;
+		// ctx.moveTo.apply(ctx, baseTriangleCartesian[0]);
+		// baseTriangleCartesian.slice(1).forEach(function (coord) {
+		// 	ctx.lineTo.apply(ctx, coord);
+		// });
+		// ctx.lineTo.apply(ctx, baseTriangleCartesian[0]);
+		// ctx.stroke();
 
 
-		var bezierBaseTriangleBarycentric = [
-			// [1, 0, 0],
-			[-1, 1, 1],
-			[2/3, 1/3 , 0],
-			[1/3, 2/3 , 0],
-			[0, 1 , 0],
-			[0, 2/3 , 1/3],
-			[0, 1/3 , 2/3],
-			[0, 0 , 1],
-			[1/3, 0 , 2/3],
-			[2/3, 0 , 1/3]
-		]
 
+		function makeBezierTriangle (triangle) {
+
+			return [
+				[1, 0, 0],
+				[2/3, 1/3 , 0],
+				[1/3, 2/3 , 0],
+				[0, 1 , 0],
+				[0, 2/3 , 1/3],
+				[0, 1/3 , 2/3],
+				[0, 0 , 1],
+				[1/3, 0 , 2/3],
+				[2/3, 0 , 1/3]
+			].map(barycentricTriangleEvaluator(triangle));
+		}
+
+		function rightHalfOfBezierTriangle (bezierTriangle) {
+
+
+// TODO: Like mer komplicerat. Finns säkert matte på det.
+
+
+			var rightSide = bezierTriangle.slice(0, 3)
+
+			var rightHalfBottom = [
+				bezierTriangle[3],
+				bAvg(bezierTriangle[4], [0, 1, 0]),
+				bezierTriangle[5] // WRONG
+			];
+
+			var centerLine = [
+				evaluateBezierTriangle(bezierTriangle, [0, 2/4, 2/4]),
+				bAvg(bezierTriangle[2], bezierTriangle[7]),
+				bAvg(bezierTriangle[1], bezierTriangle[8])
+			];
+
+			return rightSide.concat(rightHalfBottom, centerLine);
+
+		}
+
+
+		function leftHalfOfBezierTriangle (bezierTriangle) {
+
+			var leftSide = bezierTriangle.slice(0, 1).concat(bezierTriangle.slice(7, 9));
+
+			var leftHalfBottom = [
+				bezierTriangle[6],
+				bAvg(bezierTriangle[5], [0, 0, 1]),
+				bezierTriangle[4] // WRONG
+			];
+
+			var centerLine = [
+				evaluateBezierTriangle(bezierTriangle, [0, 2/4, 2/4]),
+				bAvg(bezierTriangle[2], bezierTriangle[7]),
+				bAvg(bezierTriangle[1], bezierTriangle[8])
+			];
+
+			return leftSide.concat(leftHalfBottom, centerLine);
+
+		}
+
+
+		var baseTriangle = [
+			[1, 0, 0],
+			[0, 1, 0],
+			[0, 0, 1],
+		];
 
 
 		var heartRightUpper = [
@@ -186,53 +239,171 @@
 		];
 
 
+		var heartInRightHalfBarycentricBezier = [
+			heartRightUpper.map(makeRightHalf),
+			heartRightLower.map(makeRightHalf)
+		];
 
-		drawPath(transformPathByTriangle(bezierBaseTriangleBarycentric, heartBarycentricBezier));
+		var heartInLeftHalfBarycentricBezier = mirrorPath(heartInRightHalfBarycentricBezier);
+
+		function mirrorPath (path) {
+
+			return path.map(function (segment) {
+
+				return segment.map(mirrorBarycentric);
+			});
+		};
 
 
-		function drawPath (path) {
 
+
+		var baseBezierTriangle = makeBezierTriangle (baseTriangle);
+
+		drawSierpinskiHeart(baseBezierTriangle, 2, 0);
+
+
+
+		function drawSierpinskiHeart (bezierTriangle, maxDepth, depth) {
+
+			ctx.strokeStyle = "black";
 			ctx.beginPath();
 			ctx.lineWidth = lineWidth;
-			pathBarycentricToCartesian(triangle, path).forEach(function (bezier) {
+			var bezierTrianglePath = bezierTriangle.map(function (b) { return coordBarycentricToCartesian(baseTriangleCartesian, b); });
+			ctx.moveTo.apply(ctx, bezierTrianglePath[8]);
+			bezierTrianglePath.forEach(function (coord) {
+
+				ctx.lineTo.apply(ctx, coord);
+			});
+			ctx.stroke();
+
+
+
+
+			drawHalfSierpinskiHeart(rightHalfOfBezierTriangle(bezierTriangle), maxDepth, depth);
+			drawHalfSierpinskiHeart( leftHalfOfBezierTriangle(bezierTriangle), maxDepth, depth);
+		}
+
+		function drawHalfSierpinskiHeart (halfBezierTriangle, maxDepth, depth) {
+
+
+			ctx.strokeStyle = "green";
+			ctx.beginPath();
+			ctx.lineWidth = lineWidth;
+			var bezierTrianglePath = halfBezierTriangle.map(function (b) { return coordBarycentricToCartesian(baseTriangleCartesian, b); });
+			ctx.moveTo.apply(ctx, bezierTrianglePath[8]);
+			bezierTrianglePath.forEach(function (coord) {
+
+				ctx.lineTo.apply(ctx, coord);
+			});
+			ctx.stroke();
+
+
+
+
+
+			drawPath(transformPathByBezierTriangle(halfBezierTriangle, heartInRightHalfBarycentricBezier));
+			
+			if (depth < maxDepth) {
+
+				var heartRightUpperForHalf = heartRightUpper.map(makeRightHalf);
+				var topHalfTriangle = [
+					[1, 0, 0],
+					interpolateBarycentric([1, 0, 0], heartRightUpperForHalf[3], 2/3),
+					interpolateBarycentric([1, 0, 0], heartRightUpperForHalf[3], 1/3),
+					heartRightUpperForHalf[3],
+					heartRightUpperForHalf[2],
+					heartRightUpperForHalf[1],
+					heartRightUpperForHalf[0],
+					interpolateBarycentric([1, 0, 0], heartRightUpperForHalf[0], 2/3),
+					interpolateBarycentric([1, 0, 0], heartRightUpperForHalf[0], 1/3)
+				];
+				drawHalfSierpinskiHeart(
+					transformBezierTriangleByBezierTriangle(halfBezierTriangle, topHalfTriangle),
+				maxDepth, depth + 1);
+
+
+				var heartRightLowerForHalf = heartRightLower.map(makeRightHalf);
+				var lowerFullTriangle = [
+					heartRightLowerForHalf[0],
+					interpolateBarycentric([0, 1, 0], heartRightLowerForHalf[0], 2/3),
+					interpolateBarycentric([0, 1, 0], heartRightLowerForHalf[0], 1/3),
+					[0, 1, 0],
+					interpolateBarycentric([0, 1, 0], heartRightLowerForHalf[3], 1/3),
+					interpolateBarycentric([0, 1, 0], heartRightLowerForHalf[3], 2/3),
+					heartRightLowerForHalf[3],
+					heartRightLowerForHalf[2],
+					heartRightLowerForHalf[1]
+				];
+				drawSierpinskiHeart(
+					transformBezierTriangleByBezierTriangle(halfBezierTriangle, lowerFullTriangle),
+				maxDepth, depth + 1);
+			}
+		}
+
+
+
+
+		function drawPath (path, depth) {
+
+			ctx.strokeStyle = "red";
+			ctx.beginPath();
+			ctx.lineWidth = lineWidth;
+			pathBarycentricToCartesian(baseTriangleCartesian, path).forEach(function (bezier) {
 
 				ctx.moveTo.apply(ctx, bezier[0]);
 				ctx.bezierCurveTo.apply(ctx, flatten(bezier.slice(1)));
 			});
 			ctx.stroke();
+
+
+			ctx.strokeStyle = "blue";
+			ctx.beginPath();
+			ctx.lineWidth = lineWidth;
+			pathBarycentricToCartesian(baseTriangleCartesian, path).forEach(function (bezier) {
+
+				ctx.moveTo.apply(ctx, bezier[0]);
+				bezier.slice(1).forEach(function (coord) {
+
+					ctx.lineTo.apply(ctx, coord);
+				});
+			});
+			ctx.stroke();
 		}
 
-
-		function transformPathByTriangle (triangle, path) {
+		function transformPathByBezierTriangle (bezierTriangle, path) {
 
 			return path.map(function (bezier) {
 
 				return bezier.map(function (b) {
 
-					return evaluateBezierTriangle(triangle, b);
+					return evaluateBezierTriangle(bezierTriangle, b);
 				});
 			});			
 		}
 
-		function evaluateBezierTriangle (triangle, b) {
+		function transformBezierTriangleByBezierTriangle (transformer, transformee) {
 
-			var center = bAvg(
-				triangle[1],
-				triangle[2],
-				triangle[4],
-				triangle[5],
-				triangle[7],
-				triangle[8]
-			);
+			// return transformee.map(barycentricTriangleEvaluator())
 
-			var subTriangles = [
-				[triangle[0], triangle[1], triangle[8]],
-				[triangle[1], triangle[2], center     ],
-				[triangle[2], triangle[3], triangle[4]],
-				[center     , triangle[4], triangle[5]],
-				[triangle[7], triangle[5], triangle[6]],
-				[triangle[8], center     , triangle[7]]
-			];
+
+// TODO: Just using the resulting bezier patch coord for the tangents is plain wrong.
+			return transformee.map(function (b) {
+
+				return evaluateBezierTriangle(transformer, b);
+			});			
+		}
+
+		function bezierTriangleByBezierTriangleTransformer (transformer) {
+
+			return function (transformee) {
+
+				return transformBezierTriangleByBezierTriangle (transformer, transformee);
+			}
+		}
+
+		function evaluateBezierTriangle (bezierTriangle, b) {
+
+			var subTriangles = makeSubTriangles(bezierTriangle);
 
 			return evaluateBarycentricTriangle([
 				evaluateBarycentricTriangle([
@@ -251,6 +422,27 @@
 					evaluateBarycentricTriangle(subTriangles[4], b)
 				], b)
 			], b);
+		}
+
+		function makeSubTriangles (bezierTriangle) {
+
+			var center = bAvg(
+				bezierTriangle[1],
+				bezierTriangle[2],
+				bezierTriangle[4],
+				bezierTriangle[5],
+				bezierTriangle[7],
+				bezierTriangle[8]
+			);
+
+			return [
+				[bezierTriangle[0], bezierTriangle[1], bezierTriangle[8]],
+				[bezierTriangle[1], bezierTriangle[2], center     ],
+				[bezierTriangle[2], bezierTriangle[3], bezierTriangle[4]],
+				[center     , bezierTriangle[4], bezierTriangle[5]],
+				[bezierTriangle[7], bezierTriangle[5], bezierTriangle[6]],
+				[bezierTriangle[8], center     , bezierTriangle[7]]
+			];
 		}
 
 		function bAvg (any_number_of_coords) {
@@ -283,6 +475,35 @@
 				triangle[0][2] * b[0] +
 				triangle[1][2] * b[1] +
 				triangle[2][2] * b[2]
+			];
+		}
+
+		function barycentricTriangleEvaluator (triangle) {
+
+			return function (b) {
+
+				return evaluateBarycentricTriangle(triangle, b);
+			}
+		}
+
+		function makeRightHalf (b) {
+
+			return [b[0], b[1] - b[2], b[2] * 2];
+		}
+
+		function unmakeRightHalf (b) {
+
+			var newB2 = b[2] / 2;
+
+			return [b[0], b[1] + newB2, newB2];
+		}
+
+		function interpolateBarycentric (a, b, factor) {
+
+			return [
+				a[0]*(1-factor) + b[0]*factor,
+				a[1]*(1-factor) + b[1]*factor,
+				a[2]*(1-factor) + b[2]*factor
 			];
 		}
 
