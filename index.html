@@ -158,7 +158,6 @@
 			heartRightLower,
 
 			bezierTriangle,
-			maxDepth,
 			depth
 		) {
 
@@ -185,7 +184,6 @@
 				heartRightLower,
 
 				rightHalfOfBezierTriangle(bezierTriangle),
-				maxDepth,
 				depth
 			);
 			drawHalfSierpinskiHeart(
@@ -197,7 +195,6 @@
 				heartRightLower,
 
 				leftHalfOfBezierTriangle(bezierTriangle),
-				maxDepth,
 				depth
 			);
 		}
@@ -211,7 +208,6 @@
 			heartRightLower,
 
 			halfBezierTriangle,
-			maxDepth,
 			depth
 		) {
 
@@ -241,7 +237,7 @@
 				)
 			);
 			
-			if (depth < maxDepth) {
+			if (depth > 1) {
 
 				var heartRightUpperForHalf = heartRightUpper.map(makeRightHalf);
 				var topHalfTriangle = [
@@ -264,8 +260,7 @@
 					heartRightLower,
 
 					transformBezierTriangleByBezierTriangle(halfBezierTriangle, topHalfTriangle),
-					maxDepth,
-					depth + 1
+					depth - 1
 				);
 
 
@@ -290,8 +285,7 @@
 					heartRightLower,
 
 					transformBezierTriangleByBezierTriangle(halfBezierTriangle, lowerFullTriangle),
-					maxDepth,
-					depth + 1
+					depth - 1
 				);
 			}
 		}
@@ -587,8 +581,7 @@
 				heartRightLower,
 
 				baseBezierTriangle,
-				2,
-				0
+				2
 			);
 
 
