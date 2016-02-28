@@ -149,7 +149,18 @@
 			});
 		};
 
-		function drawSierpinskiHeart (bezierTriangle, maxDepth, depth) {
+		function drawSierpinskiHeart (
+			ctx,
+			lineWidth,
+			baseTriangleCartesian,
+			heartInRightHalfBarycentricBezier,
+			heartRightUpper,
+			heartRightLower,
+
+			bezierTriangle,
+			maxDepth,
+			depth
+		) {
 
 			ctx.strokeStyle = "black";
 			ctx.beginPath();
@@ -165,11 +176,44 @@
 
 
 
-			drawHalfSierpinskiHeart(rightHalfOfBezierTriangle(bezierTriangle), maxDepth, depth);
-			drawHalfSierpinskiHeart( leftHalfOfBezierTriangle(bezierTriangle), maxDepth, depth);
+			drawHalfSierpinskiHeart(
+				ctx,
+				lineWidth,
+				baseTriangleCartesian,
+				heartInRightHalfBarycentricBezier,
+				heartRightUpper,
+				heartRightLower,
+
+				rightHalfOfBezierTriangle(bezierTriangle),
+				maxDepth,
+				depth
+			);
+			drawHalfSierpinskiHeart(
+				ctx,
+				lineWidth,
+				baseTriangleCartesian,
+				heartInRightHalfBarycentricBezier,
+				heartRightUpper,
+				heartRightLower,
+
+				leftHalfOfBezierTriangle(bezierTriangle),
+				maxDepth,
+				depth
+			);
 		}
 
-		function drawHalfSierpinskiHeart (halfBezierTriangle, maxDepth, depth) {
+		function drawHalfSierpinskiHeart (
+			ctx,
+			lineWidth,
+			baseTriangleCartesian,
+			heartInRightHalfBarycentricBezier,
+			heartRightUpper,
+			heartRightLower,
+
+			halfBezierTriangle,
+			maxDepth,
+			depth
+		) {
 
 
 			ctx.strokeStyle = "green";
@@ -187,7 +231,15 @@
 
 
 
-			drawPath(transformPathByBezierTriangle(halfBezierTriangle, heartInRightHalfBarycentricBezier));
+			drawPath(
+				ctx,
+				lineWidth,
+				baseTriangleCartesian,
+				transformPathByBezierTriangle(
+					halfBezierTriangle,
+					heartInRightHalfBarycentricBezier
+				)
+			);
 			
 			if (depth < maxDepth) {
 
@@ -204,8 +256,17 @@
 					interpolateBarycentric([1, 0, 0], heartRightUpperForHalf[0], 1/3)
 				];
 				drawHalfSierpinskiHeart(
+					ctx,
+					lineWidth,
+					baseTriangleCartesian,
+					heartInRightHalfBarycentricBezier,
+					heartRightUpper,
+					heartRightLower,
+
 					transformBezierTriangleByBezierTriangle(halfBezierTriangle, topHalfTriangle),
-				maxDepth, depth + 1);
+					maxDepth,
+					depth + 1
+				);
 
 
 				var heartRightLowerForHalf = heartRightLower.map(makeRightHalf);
@@ -221,15 +282,24 @@
 					heartRightLowerForHalf[1]
 				];
 				drawSierpinskiHeart(
+					ctx,
+					lineWidth,
+					baseTriangleCartesian,
+					heartInRightHalfBarycentricBezier,
+					heartRightUpper,
+					heartRightLower,
+
 					transformBezierTriangleByBezierTriangle(halfBezierTriangle, lowerFullTriangle),
-				maxDepth, depth + 1);
+					maxDepth,
+					depth + 1
+				);
 			}
 		}
 
 
 
 
-		function drawPath (path, depth) {
+		function drawPath (ctx, lineWidth, baseTriangleCartesian, path, depth) {
 
 			ctx.strokeStyle = "red";
 			ctx.beginPath();
@@ -394,120 +464,135 @@
 		}
 
 
-		var canvas = document.getElementById('canvas');
-		var ctx = canvas.getContext('2d');
-
-		var pixelDensity = window.devicePixelRatio;
-		var lineWidth = 2 * pixelDensity;
-		var canvasSize = [
-			canvas.clientWidth  * pixelDensity,
-			canvas.clientHeight * pixelDensity
-		];
-		canvas.setAttribute('width',  canvasSize[0]);
-		canvas.setAttribute('height', canvasSize[1]);
+		(function main () {
 
 
-		var triangleHeightFactor = Math.sqrt(.75);
-		var triangleSize = [
-			Math.min(canvasSize[0], canvasSize[1] / triangleHeightFactor) - 2 * lineWidth,
-			Math.min(canvasSize[1], canvasSize[0] * triangleHeightFactor) - 2 * lineWidth
-		];
-		var margin = vsMul(vSub(canvasSize, triangleSize), 1/2);
-		var baseTriangleCartesian = [
-			vAdd(margin, [triangleSize[0]/2, 0              ]),
-			vAdd(margin, [triangleSize[0]  , triangleSize[1]]),
-			vAdd(margin, [0                , triangleSize[1]])
-		];
+			var canvas = document.getElementById('canvas');
+			var ctx = canvas.getContext('2d');
+
+			var pixelDensity = window.devicePixelRatio;
+			var lineWidth = 2 * pixelDensity;
+			var canvasSize = [
+				canvas.clientWidth  * pixelDensity,
+				canvas.clientHeight * pixelDensity
+			];
+			canvas.setAttribute('width',  canvasSize[0]);
+			canvas.setAttribute('height', canvasSize[1]);
 
 
-		// ctx.beginPath();
-		// ctx.lineWidth = lineWidth;
-		// ctx.moveTo.apply(ctx, baseTriangleCartesian[0]);
-		// baseTriangleCartesian.slice(1).forEach(function (coord) {
-		// 	ctx.lineTo.apply(ctx, coord);
-		// });
-		// ctx.lineTo.apply(ctx, baseTriangleCartesian[0]);
-		// ctx.stroke();
+			var triangleHeightFactor = Math.sqrt(.75);
+			var triangleSize = [
+				Math.min(canvasSize[0], canvasSize[1] / triangleHeightFactor) - 2 * lineWidth,
+				Math.min(canvasSize[1], canvasSize[0] * triangleHeightFactor) - 2 * lineWidth
+			];
+			var margin = vsMul(vSub(canvasSize, triangleSize), 1/2);
+			var baseTriangleCartesian = [
+				vAdd(margin, [triangleSize[0]/2, 0              ]),
+				vAdd(margin, [triangleSize[0]  , triangleSize[1]]),
+				vAdd(margin, [0                , triangleSize[1]])
+			];
 
 
-		var baseTriangle = [
-			[1, 0, 0],
-			[0, 1, 0],
-			[0, 0, 1],
-		];
+			// ctx.beginPath();
+			// ctx.lineWidth = lineWidth;
+			// ctx.moveTo.apply(ctx, baseTriangleCartesian[0]);
+			// baseTriangleCartesian.slice(1).forEach(function (coord) {
+			// 	ctx.lineTo.apply(ctx, coord);
+			// });
+			// ctx.lineTo.apply(ctx, baseTriangleCartesian[0]);
+			// ctx.stroke();
 
 
-		var heartRightUpper = [
-			[
-				1/2,
-				1/4,
-				1/4
-			],
-			[
-				13/20,
-				5/20,
-				2/20
-			],
-			[
-				6/10,
-				4/10,
+			var baseTriangle = [
+				[1, 0, 0],
+				[0, 1, 0],
+				[0, 0, 1],
+			];
+
+
+			var heartRightUpper = [
+				[
+					1/2,
+					1/4,
+					1/4
+				],
+				[
+					13/20,
+					5/20,
+					2/20
+				],
+				[
+					6/10,
+					4/10,
+					0
+				],
+				[
+					1/2,
+					1/2,
+					0
+				],
+			];
+
+			var heartRightLower = [
+				[
+					1/2,
+					1/2,
+					0
+				],
+				[
+					4/10,
+					6/10,
+					0
+				],
+				[
+					3/16,
+					10/16,
+					3/16
+				],
+				[
+					0,
+					1/2,
+					1/2
+				]
+			];
+
+
+			var heartBarycentricBezier = [
+				heartRightUpper,
+				heartRightLower,
+				heartRightLower.map(mirrorBarycentric),
+				heartRightUpper.map(mirrorBarycentric)
+			];
+
+
+			var heartInRightHalfBarycentricBezier = [
+				heartRightUpper.map(makeRightHalf),
+				heartRightLower.map(makeRightHalf)
+			];
+
+			var heartInLeftHalfBarycentricBezier = mirrorPath(heartInRightHalfBarycentricBezier);
+
+
+
+
+
+			var baseBezierTriangle = makeBezierTriangle (baseTriangle);
+
+			drawSierpinskiHeart(
+				ctx,
+				lineWidth,
+				baseTriangleCartesian,
+				heartInRightHalfBarycentricBezier,
+				heartRightUpper,
+				heartRightLower,
+
+				baseBezierTriangle,
+				2,
 				0
-			],
-			[
-				1/2,
-				1/2,
-				0
-			],
-		];
-
-		var heartRightLower = [
-			[
-				1/2,
-				1/2,
-				0
-			],
-			[
-				4/10,
-				6/10,
-				0
-			],
-			[
-				3/16,
-				10/16,
-				3/16
-			],
-			[
-				0,
-				1/2,
-				1/2
-			]
-		];
+			);
 
 
-		var heartBarycentricBezier = [
-			heartRightUpper,
-			heartRightLower,
-			heartRightLower.map(mirrorBarycentric),
-			heartRightUpper.map(mirrorBarycentric)
-		];
-
-
-		var heartInRightHalfBarycentricBezier = [
-			heartRightUpper.map(makeRightHalf),
-			heartRightLower.map(makeRightHalf)
-		];
-
-		var heartInLeftHalfBarycentricBezier = mirrorPath(heartInRightHalfBarycentricBezier);
-
-
-
-
-
-		var baseBezierTriangle = makeBezierTriangle (baseTriangle);
-
-		drawSierpinskiHeart(baseBezierTriangle, 2, 0);
-
-
+		})();
 
 
 	</script>
