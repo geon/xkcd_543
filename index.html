@@ -91,24 +91,38 @@
 				evaluateBezierTriangle(bezierTriangle, [ 3/5,   1/5,   1/5]),
 			];
 
-			var  leftSide = bezierTriangle.slice(0, 1).concat(bezierTriangle.slice(7, 9));
-			var rightSide = bezierTriangle.slice(0, 3)
-
-			var rightHalfBottom = [
-				bezierTriangle[3],
-				bAvg(bezierTriangle[4], [0, 1, 0]),
-				bezierTriangle[5] // WRONG
+			var barycentricCoordsOfRightHalfBottom = [
+				[0/6, 6/6, 0/6],
+				[0/6, 5/6, 1/6],
+				[0/6, 4/6, 2/6]
 			];
 
-			var leftHalfBottom = [
-				bezierTriangle[6],
-				bAvg(bezierTriangle[5], [0, 0, 1]),
-				bezierTriangle[4] // WRONG
-			];
+			//    0
+			//   8 1
+			//  7   2
+			// 6 5 4 3
 
 			return {
-				left : leftSide.concat(leftHalfBottom, centerLine),
-				right: rightSide.concat(rightHalfBottom, centerLine)
+				left : [].concat(
+					[0, 8, 7]
+						.map(function(i){ return bezierTriangle[i];}),
+					barycentricCoordsOfRightHalfBottom
+						// Left side winds the opposite way to get the curve on the right side.
+						.map(mirrorBarycentric)
+						.map(function (b) {
+							return evaluateBezierTriangle(bezierTriangle, b);
+						}),
+					centerLine
+				),
+				right: [].concat(
+					[0, 1, 2]
+						.map(function(i){ return bezierTriangle[i];}),
+					barycentricCoordsOfRightHalfBottom
+						.map(function (b) {
+							return evaluateBezierTriangle(bezierTriangle, b);
+						}),
+					centerLine
+				)
 			};
 		}
 
