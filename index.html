@@ -187,23 +187,6 @@
 			depth
 		) {
 
-
-
-			ctx.strokeStyle = "green";
-			ctx.beginPath();
-			ctx.lineWidth = lineWidth;
-			var bezierTrianglePath = halfBezierTriangle.map(function (b) { return coordBarycentricToCartesian(baseTriangleCartesian, b); });
-			ctx.moveTo.apply(ctx, bezierTrianglePath[8]);
-			bezierTrianglePath.forEach(function (coord) {
-
-				ctx.lineTo.apply(ctx, coord);
-			});
-			ctx.stroke();
-
-
-
-
-
 			drawPath(
 				ctx,
 				lineWidth,
@@ -279,20 +262,6 @@
 
 				ctx.moveTo.apply(ctx, bezier[0]);
 				ctx.bezierCurveTo.apply(ctx, flatten(bezier.slice(1)));
-			});
-			ctx.stroke();
-
-
-			ctx.strokeStyle = "blue";
-			ctx.beginPath();
-			ctx.lineWidth = lineWidth;
-			pathBarycentricToCartesian(baseTriangleCartesian, path).forEach(function (bezier) {
-
-				ctx.moveTo.apply(ctx, bezier[0]);
-				bezier.slice(1).forEach(function (coord) {
-
-					ctx.lineTo.apply(ctx, coord);
-				});
 			});
 			ctx.stroke();
 		}
