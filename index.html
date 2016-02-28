@@ -79,22 +79,6 @@
 			return [b[0], b[2], b[1]];
 		}
 
-		function makeBezierTriangle (triangle) {
-
-			return [
-				[1, 0, 0],
-				[2/3, 1/3 , 0],
-				[1/3, 2/3 , 0],
-				[0, 1 , 0],
-				[0, 2/3 , 1/3],
-				[0, 1/3 , 2/3],
-				[0, 0 , 1],
-				[1/3, 0 , 2/3],
-				[2/3, 0 , 1/3]
-			].map(barycentricTriangleEvaluator(triangle));
-		}
-
-
 		function splitBezierTriangle (bezierTriangle) {
 
 
@@ -465,13 +449,6 @@
 			];
 
 
-			var baseTriangle = [
-				[1, 0, 0],
-				[0, 1, 0],
-				[0, 0, 1],
-			];
-
-
 			var heartRightUpper = [
 				[
 					1/2,
@@ -538,7 +515,17 @@
 
 
 
-			var baseBezierTriangle = makeBezierTriangle (baseTriangle);
+			var baseBezierTriangle = [
+				[1, 0, 0],
+				[2/3, 1/3 , 0],
+				[1/3, 2/3 , 0],
+				[0, 1 , 0],
+				[0, 2/3 , 1/3],
+				[0, 1/3 , 2/3],
+				[0, 0 , 1],
+				[1/3, 0 , 2/3],
+				[2/3, 0 , 1/3]
+			];
 
 			drawSierpinskiHeart(
 				ctx,
