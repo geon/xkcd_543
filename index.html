@@ -81,13 +81,14 @@
 
 		function splitBezierTriangle (bezierTriangle) {
 
-
-// TODO: Like mer komplicerat. Finns säkert matte på det.
-
 			var centerLine = [
-				evaluateBezierTriangle(bezierTriangle, [0, 2/4, 2/4]),
-				bAvg(bezierTriangle[2], bezierTriangle[7]),
-				bAvg(bezierTriangle[1], bezierTriangle[8])
+				// Bottom midpoint.
+				evaluateBezierTriangle(bezierTriangle, [ 0/2,   1/2,   1/2]),
+				// Progressively closer to the top corner.
+				// Just arbitrary interpolated values picked because they look ok. (Just using 1/3 and 2/3 looks bad.)
+				// There's probably a correct mathy way to find the exact spots.
+				evaluateBezierTriangle(bezierTriangle, [18/64, 23/64, 23/64]),
+				evaluateBezierTriangle(bezierTriangle, [ 3/5,   1/5,   1/5]),
 			];
 
 			var  leftSide = bezierTriangle.slice(0, 1).concat(bezierTriangle.slice(7, 9));
