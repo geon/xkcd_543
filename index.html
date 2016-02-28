@@ -161,20 +161,6 @@
 			depth
 		) {
 
-			ctx.strokeStyle = "black";
-			ctx.beginPath();
-			ctx.lineWidth = lineWidth;
-			var bezierTrianglePath = bezierTriangle.map(function (b) { return coordBarycentricToCartesian(baseTriangleCartesian, b); });
-			ctx.moveTo.apply(ctx, bezierTrianglePath[8]);
-			bezierTrianglePath.forEach(function (coord) {
-
-				ctx.lineTo.apply(ctx, coord);
-			});
-			ctx.stroke();
-
-
-
-
 			drawHalfSierpinskiHeart(
 				ctx,
 				lineWidth,
