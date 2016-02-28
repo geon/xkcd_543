@@ -94,7 +94,8 @@
 			].map(barycentricTriangleEvaluator(triangle));
 		}
 
-		function rightHalfOfBezierTriangle (bezierTriangle) {
+
+		function splitBezierTriangle (bezierTriangle) {
 
 
 // TODO: Like mer komplicerat. Finns säkert matte på det.
@@ -114,13 +115,6 @@
 				bAvg(bezierTriangle[1], bezierTriangle[8])
 			];
 
-			return rightSide.concat(rightHalfBottom, centerLine);
-
-		}
-
-
-		function leftHalfOfBezierTriangle (bezierTriangle) {
-
 			var leftSide = bezierTriangle.slice(0, 1).concat(bezierTriangle.slice(7, 9));
 
 			var leftHalfBottom = [
@@ -129,16 +123,11 @@
 				bezierTriangle[4] // WRONG
 			];
 
-			var centerLine = [
-				evaluateBezierTriangle(bezierTriangle, [0, 2/4, 2/4]),
-				bAvg(bezierTriangle[2], bezierTriangle[7]),
-				bAvg(bezierTriangle[1], bezierTriangle[8])
-			];
-
-			return leftSide.concat(leftHalfBottom, centerLine);
-
+			return {
+				left : leftSide.concat(leftHalfBottom, centerLine),
+				right: rightSide.concat(rightHalfBottom, centerLine)
+			};
 		}
-
 
 
 		function mirrorPath (path) {
@@ -161,6 +150,10 @@
 			depth
 		) {
 
+			// Split the heart in left/right halves and draw both.
+
+			var halves = splitBezierTriangle(bezierTriangle);
+
 			drawHalfSierpinskiHeart(
 				ctx,
 				lineWidth,
@@ -169,7 +162,7 @@
 				heartRightUpper,
 				heartRightLower,
 
-				rightHalfOfBezierTriangle(bezierTriangle),
+				halves.left,
 				depth
 			);
 			drawHalfSierpinskiHeart(
@@ -180,7 +173,7 @@
 				heartRightUpper,
 				heartRightLower,
 
-				leftHalfOfBezierTriangle(bezierTriangle),
+				halves.right,
 				depth
 			);
 		}
@@ -196,6 +189,7 @@
 			halfBezierTriangle,
 			depth
 		) {
+
 
 
 			ctx.strokeStyle = "green";
