@@ -1,0 +1,25 @@
+{
+  "name": "xkcd_543",
+  "version": "1.0.0",
+  "description": "XKCD 543",
+  "main": "heart.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"start": "webpack-dev-server",
+		"tsc": "tsc",
+		"lint": "tslint -c tslint.json 'src/**/*.ts' -e 'src/**/*.d.ts' --fix"
+	},
+  "author": "Victor Widell",
+  "license": "ISC",
+  "prettier": {
+    "useTabs": true,
+    "trailingComma": "all"
+  },
+  "devDependencies": {
+    "prettier": "^1.9.2",
+    "ts-loader": "^3.2.0",
+    "typescript": "^2.6.2",
+    "webpack": "^3.10.0",
+    "webpack-dev-server": "^2.9.7"
+  }
+}
