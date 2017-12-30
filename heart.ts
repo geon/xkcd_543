@@ -403,21 +403,21 @@ function interpolateBarycentric(a: Coord, b: Coord, factor: number) {
 		[0, 1 / 2, 1 / 2],
 	];
 
-	var heartBarycentricBezier = [
-		heartRightUpper,
-		heartRightLower,
-		heartRightLower.map(mirrorBarycentric),
-		heartRightUpper.map(mirrorBarycentric),
-	];
+	// var heartBarycentricBezier = [
+	// 	heartRightUpper,
+	// 	heartRightLower,
+	// 	heartRightLower.map(mirrorBarycentric),
+	// 	heartRightUpper.map(mirrorBarycentric),
+	// ];
 
 	var heartInRightHalfBarycentricBezier = [
 		heartRightUpper.map(makeRightHalf),
 		heartRightLower.map(makeRightHalf),
 	];
 
-	var heartInLeftHalfBarycentricBezier = mirrorPath(
-		heartInRightHalfBarycentricBezier,
-	);
+	// var heartInLeftHalfBarycentricBezier = mirrorPath(
+	// 	heartInRightHalfBarycentricBezier,
+	// );
 
 	var baseBezierTriangle = [
 		[1, 0, 0],
