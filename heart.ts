@@ -1,4 +1,9 @@
-function vAdd(...vectors) {
+type Coord = Array<number>; // 3 elements for barycentric.
+type Triangle = Array<Coord>;
+type BezierCurve = Array<Coord>; // 4 elements
+type Path = Array<BezierCurve>;
+
+function vAdd(...vectors: Array<Coord>) {
 	var result = [0, 0];
 
 	for (var i = 0; i < vectors.length; i++) {
@@ -9,15 +14,15 @@ function vAdd(...vectors) {
 	return result;
 }
 
-function vSub(a, b) {
+function vSub(a: Coord, b: Coord) {
 	return [a[0] - b[0], a[1] - b[1]];
 }
 
-function vsMul(v, s) {
+function vsMul(v: Coord, s: number) {
 	return [v[0] * s, v[1] * s];
 }
 
-function coordBarycentricToCartesian(triangle, b) {
+function coordBarycentricToCartesian(triangle: Triangle, b: Coord) {
 	return vAdd(
 		vsMul(triangle[0], b[0]),
 		vsMul(triangle[1], b[1]),
@@ -25,7 +30,7 @@ function coordBarycentricToCartesian(triangle, b) {
 	);
 }
 
-function pathBarycentricToCartesian(triangle, path) {
+function pathBarycentricToCartesian(triangle: Triangle, path: Path) {
 	return path.map(function(bezier) {
 		return bezier.map(function(b) {
 			return coordBarycentricToCartesian(triangle, b);
@@ -33,17 +38,17 @@ function pathBarycentricToCartesian(triangle, path) {
 	});
 }
 
-function flatten(arrayOfArrays) {
+function flatten<T>(arrayOfArrays: Array<Array<T>>): Array<T> {
 	return arrayOfArrays.reduce(function(soFar, current) {
 		return soFar.concat(current);
 	}, []);
 }
 
-function mirrorBarycentric(b) {
+function mirrorBarycentric(b: Coord) {
 	return [b[0], b[2], b[1]];
 }
 
-function splitBezierTriangle(bezierTriangle) {
+function splitBezierTriangle(bezierTriangle: Triangle) {
 	var centerLine = [
 		// Bottom midpoint.
 		evaluateBezierTriangle(bezierTriangle, [0 / 2, 1 / 2, 1 / 2]),
@@ -66,7 +71,7 @@ function splitBezierTriangle(bezierTriangle) {
 	// 6 5 4 3
 
 	return {
-		left: [].concat(
+		left: ([] as Array<Array<number>>).concat(
 			[0, 8, 7].map(function(i) {
 				return bezierTriangle[i];
 			}),
@@ -78,7 +83,7 @@ function splitBezierTriangle(bezierTriangle) {
 				}),
 			centerLine,
 		),
-		right: [].concat(
+		right: ([] as Array<Array<number>>).concat(
 			[0, 1, 2].map(function(i) {
 				return bezierTriangle[i];
 			}),
@@ -90,21 +95,21 @@ function splitBezierTriangle(bezierTriangle) {
 	};
 }
 
-function mirrorPath(path) {
+function mirrorPath(path: Path) {
 	return path.map(function(segment) {
 		return segment.map(mirrorBarycentric);
 	});
 }
 
 function drawSierpinskiHeart(
-	ctx,
-	lineWidth,
-	baseTriangleCartesian,
-	heartInRightHalfBarycentricBezier,
-	heartRightUpper,
-	heartRightLower,
-	bezierTriangle,
-	depth,
+	ctx: CanvasRenderingContext2D,
+	lineWidth: number,
+	baseTriangleCartesian: Triangle,
+	heartInRightHalfBarycentricBezier: Path,
+	heartRightUpper: BezierCurve,
+	heartRightLower: BezierCurve,
+	bezierTriangle: Triangle,
+	depth: number,
 ) {
 	// Split the heart in left/right halves and draw both.
 
@@ -135,14 +140,14 @@ function drawSierpinskiHeart(
 }
 
 function drawHalfSierpinskiHeart(
-	ctx,
-	lineWidth,
-	baseTriangleCartesian,
-	heartInRightHalfBarycentricBezier,
-	heartRightUpper,
-	heartRightLower,
-	halfBezierTriangle,
-	depth,
+	ctx: CanvasRenderingContext2D,
+	lineWidth: number,
+	baseTriangleCartesian: Triangle,
+	heartInRightHalfBarycentricBezier: Path,
+	heartRightUpper: BezierCurve,
+	heartRightLower: BezierCurve,
+	halfBezierTriangle: Triangle,
+	depth: number,
 ) {
 	drawPath(
 		ctx,
@@ -211,7 +216,12 @@ function drawHalfSierpinskiHeart(
 	}
 }
 
-function drawPath(ctx, lineWidth, baseTriangleCartesian, path) {
+function drawPath(
+	ctx: CanvasRenderingContext2D,
+	lineWidth: number,
+	baseTriangleCartesian: Triangle,
+	path: Path,
+) {
 	ctx.strokeStyle = "red";
 	ctx.beginPath();
 	ctx.lineWidth = lineWidth;
@@ -224,7 +234,7 @@ function drawPath(ctx, lineWidth, baseTriangleCartesian, path) {
 	ctx.stroke();
 }
 
-function transformPathByBezierTriangle(bezierTriangle, path) {
+function transformPathByBezierTriangle(bezierTriangle: Triangle, path: Path) {
 	return path.map(function(bezier) {
 		return bezier.map(function(b) {
 			return evaluateBezierTriangle(bezierTriangle, b);
@@ -232,7 +242,10 @@ function transformPathByBezierTriangle(bezierTriangle, path) {
 	});
 }
 
-function transformBezierTriangleByBezierTriangle(transformer, transformee) {
+function transformBezierTriangleByBezierTriangle(
+	transformer: Triangle,
+	transformee: Triangle,
+) {
 	// return transformee.map(barycentricTriangleEvaluator())
 
 	// TODO: Just using the resulting bezier patch coord for the tangents is plain wrong.
@@ -241,13 +254,13 @@ function transformBezierTriangleByBezierTriangle(transformer, transformee) {
 	});
 }
 
-function bezierTriangleByBezierTriangleTransformer(transformer) {
-	return function(transformee) {
+function bezierTriangleByBezierTriangleTransformer(transformer: Triangle) {
+	return function(transformee: Triangle) {
 		return transformBezierTriangleByBezierTriangle(transformer, transformee);
 	};
 }
 
-function evaluateBezierTriangle(bezierTriangle, b) {
+function evaluateBezierTriangle(bezierTriangle: Triangle, b: Coord) {
 	var subTriangles = makeSubTriangles(bezierTriangle);
 
 	return evaluateBarycentricTriangle(
@@ -281,7 +294,7 @@ function evaluateBezierTriangle(bezierTriangle, b) {
 	);
 }
 
-function makeSubTriangles(bezierTriangle) {
+function makeSubTriangles(bezierTriangle: Triangle) {
 	var center = bAvg(
 		bezierTriangle[1],
 		bezierTriangle[2],
@@ -301,7 +314,7 @@ function makeSubTriangles(bezierTriangle) {
 	];
 }
 
-function bAvg(...coords) {
+function bAvg(...coords: Array<Coord>) {
 	var result = [0, 0, 0];
 
 	for (var i = 0; i < coords.length; i++) {
@@ -317,7 +330,7 @@ function bAvg(...coords) {
 	return result;
 }
 
-function evaluateBarycentricTriangle(triangle, b) {
+function evaluateBarycentricTriangle(triangle: Triangle, b: Coord) {
 	return [
 		triangle[0][0] * b[0] + triangle[1][0] * b[1] + triangle[2][0] * b[2],
 		triangle[0][1] * b[0] + triangle[1][1] * b[1] + triangle[2][1] * b[2],
@@ -325,23 +338,23 @@ function evaluateBarycentricTriangle(triangle, b) {
 	];
 }
 
-function barycentricTriangleEvaluator(triangle) {
-	return function(b) {
+function barycentricTriangleEvaluator(triangle: Triangle) {
+	return function(b: Coord) {
 		return evaluateBarycentricTriangle(triangle, b);
 	};
 }
 
-function makeRightHalf(b) {
+function makeRightHalf(b: Coord) {
 	return [b[0], b[1] - b[2], b[2] * 2];
 }
 
-function unmakeRightHalf(b) {
+function unmakeRightHalf(b: Coord) {
 	var newB2 = b[2] / 2;
 
 	return [b[0], b[1] + newB2, newB2];
 }
 
-function interpolateBarycentric(a, b, factor) {
+function interpolateBarycentric(a: Coord, b: Coord, factor: number) {
 	return [
 		a[0] * (1 - factor) + b[0] * factor,
 		a[1] * (1 - factor) + b[1] * factor,
@@ -351,7 +364,7 @@ function interpolateBarycentric(a, b, factor) {
 
 (function main() {
 	var canvas = document.getElementById("canvas") as HTMLCanvasElement;
-	var ctx = canvas.getContext("2d");
+	var ctx = canvas.getContext("2d")!;
 
 	var pixelDensity = window.devicePixelRatio;
 	var lineWidth = 2 * pixelDensity;
