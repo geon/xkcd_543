@@ -1,11 +1,11 @@
-function vAdd (any_number_of_vectors) {
+function vAdd (...vectors) {
 
 	var result = [0, 0];
 
-	for (var i = 0; i < arguments.length; i++) {
+	for (var i = 0; i < vectors.length; i++) {
 
-		result[0] += arguments[i][0];
-		result[1] += arguments[i][1];
+		result[0] += vectors[i][0];
+		result[1] += vectors[i][1];
 	}
 
 	return result;
@@ -229,7 +229,7 @@ function drawHalfSierpinskiHeart (
 
 
 
-function drawPath (ctx, lineWidth, baseTriangleCartesian, path, depth) {
+function drawPath (ctx, lineWidth, baseTriangleCartesian, path) {
 
 	ctx.strokeStyle = "red";
 	ctx.beginPath();
@@ -317,20 +317,20 @@ function makeSubTriangles (bezierTriangle) {
 	];
 }
 
-function bAvg (any_number_of_coords) {
+function bAvg (...coords) {
 
 	var result = [0, 0, 0];
 
-	for (var i = 0; i < arguments.length; i++) {
+	for (var i = 0; i < coords.length; i++) {
 
-		result[0] += arguments[i][0];
-		result[1] += arguments[i][1];
-		result[2] += arguments[i][2];
+		result[0] += coords[i][0];
+		result[1] += coords[i][1];
+		result[2] += coords[i][2];
 	};
 
-	result[0] /= arguments.length;
-	result[1] /= arguments.length;
-	result[2] /= arguments.length;
+	result[0] /= coords.length;
+	result[1] /= coords.length;
+	result[2] /= coords.length;
 
 	return result;
 }
@@ -383,7 +383,7 @@ function interpolateBarycentric (a, b, factor) {
 (function main () {
 
 
-	var canvas = document.getElementById('canvas');
+	var canvas = document.getElementById('canvas') as HTMLCanvasElement;
 	var ctx = canvas.getContext('2d');
 
 	var pixelDensity = window.devicePixelRatio;
@@ -392,8 +392,8 @@ function interpolateBarycentric (a, b, factor) {
 		canvas.clientWidth  * pixelDensity,
 		canvas.clientHeight * pixelDensity
 	];
-	canvas.setAttribute('width',  canvasSize[0]);
-	canvas.setAttribute('height', canvasSize[1]);
+	canvas.setAttribute('width',  canvasSize[0] + 'px');
+	canvas.setAttribute('height', canvasSize[1] + 'px');
 
 
 	var triangleHeightFactor = Math.sqrt(.75);
