@@ -182,7 +182,7 @@ function tesselateSierpinskiHeart(
 }
 
 function tesselateHalfSierpinskiHeart(depth: number): Array<TesselatedPath> {
-	let tesselated = [
+	let tesselated: Array<TesselatedPath> = [
 		{
 			points: tesselatePath(
 				heartInRightHalfBarycentricBezier,
