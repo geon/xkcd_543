@@ -160,17 +160,16 @@ function tesselateSierpinskiHeart(
 	depth: number,
 ): Array<TesselatedPath> {
 	// Split the heart in left/right halves and draw both.
-
 	var halves = splitBezierTriangle(bezierTriangle);
-
+	const halfHeart = tesselateHalfSierpinskiHeart(depth);
 	return [
-		...tesselateHalfSierpinskiHeart(depth).map(tesselatedPath => ({
+		...halfHeart.map(tesselatedPath => ({
 			points: tesselatedPath.points.map(coord =>
 				evaluateBezierTriangle(halves.left, coord),
 			),
 			color: tesselatedPath.color,
 		})),
-		...tesselateHalfSierpinskiHeart(depth).map(tesselatedPath => ({
+		...halfHeart.map(tesselatedPath => ({
 			points: tesselatedPath.points.map(coord =>
 				evaluateBezierTriangle(halves.right, coord),
 			),
