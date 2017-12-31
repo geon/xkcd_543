@@ -146,11 +146,8 @@ function tesselateHalfSierpinskiHeart(
 ): Array<TesselatedPath> {
 	let tesselated = [
 		tesselatePath(
-			transformPathByBezierTriangle(
-				halfBezierTriangle,
-				heartInRightHalfBarycentricBezier,
-			),
-			Math.max(1, Math.ceil(depth*2))
+			heartInRightHalfBarycentricBezier,
+			Math.max(1, Math.ceil(depth * 2)),
 		),
 	];
 
@@ -189,10 +186,7 @@ function tesselateHalfSierpinskiHeart(
 				heartRightUpper,
 				heartRightLower,
 
-				transformBezierTriangleByBezierTriangle(
-					halfBezierTriangle,
-					topHalfTriangle,
-				),
+				topHalfTriangle,
 				depth - 1,
 			),
 			...tesselateSierpinskiHeart(
@@ -201,16 +195,17 @@ function tesselateHalfSierpinskiHeart(
 				heartRightUpper,
 				heartRightLower,
 
-				transformBezierTriangleByBezierTriangle(
-					halfBezierTriangle,
-					lowerFullTriangle,
-				),
+				lowerFullTriangle,
 				depth - 1,
 			),
 		];
 	}
 
-	return tesselated;
+	return tesselated.map(tesselatedPath =>
+		tesselatedPath.map(coord =>
+			evaluateBezierTriangle(halfBezierTriangle, coord),
+		),
+	);
 }
 
 function evaluateBezierCurve(
@@ -240,7 +235,6 @@ function evaluateBezierCurve(
 }
 
 function tesselatePath(path: Path, numSegments: number): TesselatedPath {
-
 	const coords = [];
 	// let coords = [] as Array<Coord>;
 	for (const curve of path) {
@@ -253,32 +247,6 @@ function tesselatePath(path: Path, numSegments: number): TesselatedPath {
 	// }
 
 	return coords;
-}
-
-function transformPathByBezierTriangle(bezierTriangle: Triangle, path: Path) {
-	return path.map(function(bezier) {
-		return bezier.map(function(b) {
-			return evaluateBezierTriangle(bezierTriangle, b);
-		});
-	});
-}
-
-function transformBezierTriangleByBezierTriangle(
-	transformer: Triangle,
-	transformee: Triangle,
-) {
-	// return transformee.map(barycentricTriangleEvaluator())
-
-	// TODO: Just using the resulting bezier patch coord for the tangents is plain wrong.
-	return transformee.map(function(b) {
-		return evaluateBezierTriangle(transformer, b);
-	});
-}
-
-function bezierTriangleByBezierTriangleTransformer(transformer: Triangle) {
-	return function(transformee: Triangle) {
-		return transformBezierTriangleByBezierTriangle(transformer, transformee);
-	};
 }
 
 function evaluateBezierTriangle(bezierTriangle: Triangle, b: Coord) {
