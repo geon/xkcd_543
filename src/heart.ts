@@ -31,20 +31,6 @@ function coordBarycentricToCartesian(triangle: Triangle, b: Coord) {
 	);
 }
 
-function pathBarycentricToCartesian(triangle: Triangle, path: Path) {
-	return path.map(function(bezier) {
-		return bezier.map(function(b) {
-			return coordBarycentricToCartesian(triangle, b);
-		});
-	});
-}
-
-function flatten<T>(arrayOfArrays: Array<Array<T>>): Array<T> {
-	return arrayOfArrays.reduce(function(soFar, current) {
-		return soFar.concat(current);
-	}, []);
-}
-
 function mirrorBarycentric(b: Coord) {
 	return [b[0], b[2], b[1]];
 }
@@ -94,12 +80,6 @@ function splitBezierTriangle(bezierTriangle: Triangle) {
 			centerLine,
 		),
 	};
-}
-
-function mirrorPath(path: Path) {
-	return path.map(function(segment) {
-		return segment.map(mirrorBarycentric);
-	});
 }
 
 function tesselateSierpinskiHeart(
@@ -327,20 +307,8 @@ function evaluateBarycentricTriangle(triangle: Triangle, b: Coord) {
 	];
 }
 
-function barycentricTriangleEvaluator(triangle: Triangle) {
-	return function(b: Coord) {
-		return evaluateBarycentricTriangle(triangle, b);
-	};
-}
-
 function makeRightHalf(b: Coord) {
 	return [b[0], b[1] - b[2], b[2] * 2];
-}
-
-function unmakeRightHalf(b: Coord) {
-	var newB2 = b[2] / 2;
-
-	return [b[0], b[1] + newB2, newB2];
 }
 
 function interpolateBarycentric(a: Coord, b: Coord, factor: number) {
