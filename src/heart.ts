@@ -237,12 +237,13 @@ function tesselateHalfSierpinskiHeart(depth: number): Array<TesselatedPath> {
 function mapTesselatedPathsToBezierTriangle(
 	tesselatedPaths: Array<TesselatedPath>,
 	bezierTriangle: BezierTriangle,
-) {
+): Array<TesselatedPath> {
 	return tesselatedPaths.map(tesselatedPath => ({
 		points: tesselatedPath.points.map(coord =>
 			evaluateBezierTriangle(bezierTriangle, coord),
 		),
 		color: tesselatedPath.color,
+		depth: tesselatedPath.depth,
 	}));
 }
 
