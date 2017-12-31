@@ -32,7 +32,10 @@ interface BezierCurve {
 	d: BarycentricCoord;
 }
 type Path = Array<BezierCurve>;
-type TesselatedPath = Array<BarycentricCoord>;
+interface TesselatedPath {
+	points: Array<BarycentricCoord>;
+	color: string;
+}
 
 function vAdd(...vectors: Array<CartesianCoord>): CartesianCoord {
 	var result = { x: 0, y: 0 };
@@ -176,10 +179,13 @@ function tesselateHalfSierpinskiHeart(
 	depth: number,
 ): Array<TesselatedPath> {
 	let tesselated = [
-		tesselatePath(
-			heartInRightHalfBarycentricBezier,
-			Math.max(1, Math.ceil(depth * 2)),
-		),
+		{
+			points: tesselatePath(
+				heartInRightHalfBarycentricBezier,
+				Math.max(1, Math.ceil(depth * 2)),
+			),
+			color: depth % 2 ? "red" : "black",
+		},
 	];
 
 	if (depth > 1) {
@@ -212,7 +218,6 @@ function tesselateHalfSierpinskiHeart(
 		};
 
 		tesselated = [
-			...tesselated,
 			...tesselateHalfSierpinskiHeart(
 				baseTriangleCartesian,
 				heartInRightHalfBarycentricBezier,
@@ -231,14 +236,16 @@ function tesselateHalfSierpinskiHeart(
 				lowerFullTriangle,
 				depth - 1,
 			),
+			...tesselated,
 		];
 	}
 
-	return tesselated.map(tesselatedPath =>
-		tesselatedPath.map(coord =>
+	return tesselated.map(tesselatedPath => ({
+		points: tesselatedPath.points.map(coord =>
 			evaluateBezierTriangle(halfBezierTriangle, coord),
 		),
-	);
+		color: tesselatedPath.color,
+	}));
 }
 
 function evaluateBezierCurve(
@@ -267,7 +274,10 @@ function evaluateBezierCurve(
 	return interpolateBarycentric(d, e, interpolationFactor);
 }
 
-function tesselatePath(path: Path, numSegments: number): TesselatedPath {
+function tesselatePath(
+	path: Path,
+	numSegments: number,
+): Array<BarycentricCoord> {
 	const coords = [];
 	// let coords = [] as Array<Coord>;
 	for (const curve of path) {
@@ -474,13 +484,16 @@ function interpolateBarycentric(
 		7,
 	);
 
-	ctx.strokeStyle = "red";
 	ctx.lineWidth = lineWidth;
 	for (const path of tesselated) {
 		ctx.beginPath();
-		const coord = coordBarycentricToCartesian(baseTriangleCartesian, path[0]);
+		ctx.strokeStyle = path.color;
+		const coord = coordBarycentricToCartesian(
+			baseTriangleCartesian,
+			path.points[0],
+		);
 		ctx.moveTo(coord.x, coord.y);
-		for (const barycentricCoord of path.slice(1)) {
+		for (const barycentricCoord of path.points.slice(1)) {
 			const coord = coordBarycentricToCartesian(
 				baseTriangleCartesian,
 				barycentricCoord,
