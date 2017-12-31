@@ -9,6 +9,7 @@ interface CartesianCoord {
 }
 type BarycentricTriangle = Array<BarycentricCoord>;
 type CartesianTriangle = Array<CartesianCoord>;
+type BezierTriangle = Array<BarycentricCoord>;
 type BezierCurve = Array<BarycentricCoord>; // 4 elements
 type Path = Array<BezierCurve>;
 type TesselatedPath = Array<BarycentricCoord>;
@@ -48,8 +49,8 @@ function mirrorBarycentric(coord: BarycentricCoord): BarycentricCoord {
 }
 
 function splitBezierTriangle(
-	bezierTriangle: BarycentricTriangle,
-): { left: BarycentricTriangle; right: BarycentricTriangle } {
+	bezierTriangle: BezierTriangle,
+): { left: BezierTriangle; right: BezierTriangle } {
 	var centerLine = [
 		// Bottom midpoint.
 		evaluateBezierTriangle(bezierTriangle, { a: 0 / 2, b: 1 / 2, c: 1 / 2 }),
@@ -76,7 +77,7 @@ function splitBezierTriangle(
 	// 6 5 4 3
 
 	return {
-		left: ([] as BarycentricTriangle).concat(
+		left: ([] as BezierTriangle).concat(
 			[0, 8, 7].map(function(i) {
 				return bezierTriangle[i];
 			}),
@@ -88,7 +89,7 @@ function splitBezierTriangle(
 				}),
 			centerLine,
 		),
-		right: ([] as BarycentricTriangle).concat(
+		right: ([] as BezierTriangle).concat(
 			[0, 1, 2].map(function(i) {
 				return bezierTriangle[i];
 			}),
@@ -105,7 +106,7 @@ function tesselateSierpinskiHeart(
 	heartInRightHalfBarycentricBezier: Path,
 	heartRightUpper: BezierCurve,
 	heartRightLower: BezierCurve,
-	bezierTriangle: BarycentricTriangle,
+	bezierTriangle: BezierTriangle,
 	depth: number,
 ): Array<TesselatedPath> {
 	// Split the heart in left/right halves and draw both.
@@ -139,7 +140,7 @@ function tesselateHalfSierpinskiHeart(
 	heartInRightHalfBarycentricBezier: Path,
 	heartRightUpper: BezierCurve,
 	heartRightLower: BezierCurve,
-	halfBezierTriangle: BarycentricTriangle,
+	halfBezierTriangle: BezierTriangle,
 	depth: number,
 ): Array<TesselatedPath> {
 	let tesselated = [
@@ -250,7 +251,7 @@ function tesselatePath(path: Path, numSegments: number): TesselatedPath {
 }
 
 function evaluateBezierTriangle(
-	bezierTriangle: BarycentricTriangle,
+	bezierTriangle: BezierTriangle,
 	b: BarycentricCoord,
 ) {
 	var subTriangles = makeSubTriangles(bezierTriangle);
@@ -287,7 +288,7 @@ function evaluateBezierTriangle(
 }
 
 function makeSubTriangles(
-	bezierTriangle: BarycentricTriangle,
+	bezierTriangle: BezierTriangle,
 ): Array<BarycentricTriangle> {
 	var center = bAvg(
 		bezierTriangle[1],
