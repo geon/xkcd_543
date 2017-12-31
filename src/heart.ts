@@ -14,7 +14,17 @@ interface Triangle<TCoord> {
 }
 type BarycentricTriangle = Triangle<BarycentricCoord>;
 type CartesianTriangle = Triangle<CartesianCoord>;
-type BezierTriangle = Array<BarycentricCoord>;
+interface BezierTriangle {
+	a: BarycentricCoord;
+	b: BarycentricCoord;
+	c: BarycentricCoord;
+	d: BarycentricCoord;
+	e: BarycentricCoord;
+	f: BarycentricCoord;
+	g: BarycentricCoord;
+	h: BarycentricCoord;
+	i: BarycentricCoord;
+}
 interface BezierCurve {
 	a: BarycentricCoord;
 	b: BarycentricCoord;
@@ -81,33 +91,45 @@ function splitBezierTriangle(
 		{ a: 0 / 6, b: 4 / 6, c: 2 / 6 },
 	];
 
-	//    0
-	//   8 1
-	//  7   2
-	// 6 5 4 3
+	const bottomLeftHalf = barycentricCoordsOfRightHalfBottom
+		// Left side winds the opposite way to get the curve on the right side.
+		.map(mirrorBarycentric)
+		.map(function(b) {
+			return evaluateBezierTriangle(bezierTriangle, b);
+		});
+
+	const bottomRightHalf = barycentricCoordsOfRightHalfBottom.map(function(b) {
+		return evaluateBezierTriangle(bezierTriangle, b);
+	});
+
+	//    a
+	//   i b
+	//  h   c
+	// g f e d
 
 	return {
-		left: ([] as BezierTriangle).concat(
-			[0, 8, 7].map(function(i) {
-				return bezierTriangle[i];
-			}),
-			barycentricCoordsOfRightHalfBottom
-				// Left side winds the opposite way to get the curve on the right side.
-				.map(mirrorBarycentric)
-				.map(function(b) {
-					return evaluateBezierTriangle(bezierTriangle, b);
-				}),
-			centerLine,
-		),
-		right: ([] as BezierTriangle).concat(
-			[0, 1, 2].map(function(i) {
-				return bezierTriangle[i];
-			}),
-			barycentricCoordsOfRightHalfBottom.map(function(b) {
-				return evaluateBezierTriangle(bezierTriangle, b);
-			}),
-			centerLine,
-		),
+		left: {
+			a: bezierTriangle.a,
+			b: bezierTriangle.i,
+			c: bezierTriangle.h,
+			d: bottomLeftHalf[0],
+			e: bottomLeftHalf[1],
+			f: bottomLeftHalf[2],
+			g: centerLine[0],
+			h: centerLine[1],
+			i: centerLine[2],
+		},
+		right: {
+			a: bezierTriangle.a,
+			b: bezierTriangle.b,
+			c: bezierTriangle.c,
+			d: bottomRightHalf[0],
+			e: bottomRightHalf[1],
+			f: bottomRightHalf[2],
+			g: centerLine[0],
+			h: centerLine[1],
+			i: centerLine[2],
+		},
 	};
 }
 
@@ -163,31 +185,31 @@ function tesselateHalfSierpinskiHeart(
 	if (depth > 1) {
 		var heartRightUpperForHalf = makeRightHalfBezierCurve(heartRightUpper);
 		const fullA = { a: 1, b: 0, c: 0 };
-		var topHalfTriangle = [
-			fullA,
-			interpolateBarycentric(fullA, heartRightUpperForHalf.d, 2 / 3),
-			interpolateBarycentric(fullA, heartRightUpperForHalf.d, 1 / 3),
-			heartRightUpperForHalf.d,
-			heartRightUpperForHalf.c,
-			heartRightUpperForHalf.b,
-			heartRightUpperForHalf.a,
-			interpolateBarycentric(fullA, heartRightUpperForHalf.a, 2 / 3),
-			interpolateBarycentric(fullA, heartRightUpperForHalf.a, 1 / 3),
-		];
+		var topHalfTriangle = {
+			a: fullA,
+			b: interpolateBarycentric(fullA, heartRightUpperForHalf.d, 2 / 3),
+			c: interpolateBarycentric(fullA, heartRightUpperForHalf.d, 1 / 3),
+			d: heartRightUpperForHalf.d,
+			e: heartRightUpperForHalf.c,
+			f: heartRightUpperForHalf.b,
+			g: heartRightUpperForHalf.a,
+			h: interpolateBarycentric(fullA, heartRightUpperForHalf.a, 2 / 3),
+			i: interpolateBarycentric(fullA, heartRightUpperForHalf.a, 1 / 3),
+		};
 
 		var heartRightLowerForHalf = makeRightHalfBezierCurve(heartRightLower);
 		const fullB = { a: 0, b: 1, c: 0 };
-		var lowerFullTriangle = [
-			heartRightLowerForHalf.a,
-			interpolateBarycentric(fullB, heartRightLowerForHalf.a, 2 / 3),
-			interpolateBarycentric(fullB, heartRightLowerForHalf.a, 1 / 3),
-			fullB,
-			interpolateBarycentric(fullB, heartRightLowerForHalf.d, 1 / 3),
-			interpolateBarycentric(fullB, heartRightLowerForHalf.d, 2 / 3),
-			heartRightLowerForHalf.d,
-			heartRightLowerForHalf.c,
-			heartRightLowerForHalf.b,
-		];
+		var lowerFullTriangle = {
+			a: heartRightLowerForHalf.a,
+			b: interpolateBarycentric(fullB, heartRightLowerForHalf.a, 2 / 3),
+			c: interpolateBarycentric(fullB, heartRightLowerForHalf.a, 1 / 3),
+			d: fullB,
+			e: interpolateBarycentric(fullB, heartRightLowerForHalf.d, 1 / 3),
+			f: interpolateBarycentric(fullB, heartRightLowerForHalf.d, 2 / 3),
+			g: heartRightLowerForHalf.d,
+			h: heartRightLowerForHalf.c,
+			i: heartRightLowerForHalf.b,
+		};
 
 		tesselated = [
 			...tesselated,
@@ -301,21 +323,21 @@ function makeSubTriangles(
 	bezierTriangle: BezierTriangle,
 ): Array<BarycentricTriangle> {
 	var center = bAvg(
-		bezierTriangle[1],
-		bezierTriangle[2],
-		bezierTriangle[4],
-		bezierTriangle[5],
-		bezierTriangle[7],
-		bezierTriangle[8],
+		bezierTriangle.b,
+		bezierTriangle.c,
+		bezierTriangle.e,
+		bezierTriangle.f,
+		bezierTriangle.h,
+		bezierTriangle.i,
 	);
 
 	return [
-		{ a: bezierTriangle[0], b: bezierTriangle[1], c: bezierTriangle[8] },
-		{ a: bezierTriangle[1], b: bezierTriangle[2], c: center },
-		{ a: bezierTriangle[2], b: bezierTriangle[3], c: bezierTriangle[4] },
-		{ a: center, b: bezierTriangle[4], c: bezierTriangle[5] },
-		{ a: bezierTriangle[7], b: bezierTriangle[5], c: bezierTriangle[6] },
-		{ a: bezierTriangle[8], b: center, c: bezierTriangle[7] },
+		{ a: bezierTriangle.a, b: bezierTriangle.b, c: bezierTriangle.i },
+		{ a: bezierTriangle.b, b: bezierTriangle.c, c: center },
+		{ a: bezierTriangle.c, b: bezierTriangle.d, c: bezierTriangle.e },
+		{ a: center, b: bezierTriangle.e, c: bezierTriangle.f },
+		{ a: bezierTriangle.h, b: bezierTriangle.f, c: bezierTriangle.g },
+		{ a: bezierTriangle.i, b: center, c: bezierTriangle.h },
 	];
 }
 
@@ -430,17 +452,17 @@ function interpolateBarycentric(
 	// 	heartInRightHalfBarycentricBezier,
 	// );
 
-	var baseBezierTriangle = [
-		{ a: 1, b: 0, c: 0 },
-		{ a: 2 / 3, b: 1 / 3, c: 0 },
-		{ a: 1 / 3, b: 2 / 3, c: 0 },
-		{ a: 0, b: 1, c: 0 },
-		{ a: 0, b: 2 / 3, c: 1 / 3 },
-		{ a: 0, b: 1 / 3, c: 2 / 3 },
-		{ a: 0, b: 0, c: 1 },
-		{ a: 1 / 3, b: 0, c: 2 / 3 },
-		{ a: 2 / 3, b: 0, c: 1 / 3 },
-	];
+	var baseBezierTriangle = {
+		a: { a: 1, b: 0, c: 0 },
+		b: { a: 2 / 3, b: 1 / 3, c: 0 },
+		c: { a: 1 / 3, b: 2 / 3, c: 0 },
+		d: { a: 0, b: 1, c: 0 },
+		e: { a: 0, b: 2 / 3, c: 1 / 3 },
+		f: { a: 0, b: 1 / 3, c: 2 / 3 },
+		g: { a: 0, b: 0, c: 1 },
+		h: { a: 1 / 3, b: 0, c: 2 / 3 },
+		i: { a: 2 / 3, b: 0, c: 1 / 3 },
+	};
 
 	const tesselated = tesselateSierpinskiHeart(
 		baseTriangleCartesian,
