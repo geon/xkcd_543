@@ -137,7 +137,6 @@ function splitBezierTriangle(
 }
 
 function tesselateSierpinskiHeart(
-	baseTriangleCartesian: CartesianTriangle,
 	heartInRightHalfBarycentricBezier: Path,
 	heartRightUpper: BezierCurve,
 	heartRightLower: BezierCurve,
@@ -150,7 +149,6 @@ function tesselateSierpinskiHeart(
 
 	return [
 		...tesselateHalfSierpinskiHeart(
-			baseTriangleCartesian,
 			heartInRightHalfBarycentricBezier,
 			heartRightUpper,
 			heartRightLower,
@@ -159,7 +157,6 @@ function tesselateSierpinskiHeart(
 			depth,
 		),
 		...tesselateHalfSierpinskiHeart(
-			baseTriangleCartesian,
 			heartInRightHalfBarycentricBezier,
 			heartRightUpper,
 			heartRightLower,
@@ -171,7 +168,6 @@ function tesselateSierpinskiHeart(
 }
 
 function tesselateHalfSierpinskiHeart(
-	baseTriangleCartesian: CartesianTriangle,
 	heartInRightHalfBarycentricBezier: Path,
 	heartRightUpper: BezierCurve,
 	heartRightLower: BezierCurve,
@@ -219,7 +215,6 @@ function tesselateHalfSierpinskiHeart(
 
 		tesselated = [
 			...tesselateHalfSierpinskiHeart(
-				baseTriangleCartesian,
 				heartInRightHalfBarycentricBezier,
 				heartRightUpper,
 				heartRightLower,
@@ -228,7 +223,6 @@ function tesselateHalfSierpinskiHeart(
 				depth - 1,
 			),
 			...tesselateSierpinskiHeart(
-				baseTriangleCartesian,
 				heartInRightHalfBarycentricBezier,
 				heartRightUpper,
 				heartRightLower,
@@ -475,7 +469,6 @@ function interpolateBarycentric(
 	};
 
 	const tesselated = tesselateSierpinskiHeart(
-		baseTriangleCartesian,
 		heartInRightHalfBarycentricBezier,
 		heartRightUpper,
 		heartRightLower,
