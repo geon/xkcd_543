@@ -35,6 +35,7 @@ type Path = Array<BezierCurve>;
 interface TesselatedPath {
 	points: Array<BarycentricCoord>;
 	color: string;
+	depth: number;
 }
 
 const heartTopTouchTriangle: BarycentricCoord = { a: 1 / 2, b: 1 / 2, c: 0 };
@@ -189,6 +190,7 @@ function tesselateHalfSierpinskiHeart(depth: number): Array<TesselatedPath> {
 				Math.max(1, Math.ceil(depth * 2)),
 			),
 			color: depth % 2 ? "red" : "black",
+			depth: depth,
 		},
 	];
 
@@ -441,6 +443,9 @@ function interpolateBarycentric(
 	};
 
 	const tesselated = tesselateSierpinskiHeart(baseBezierTriangle, 7);
+	tesselated.sort(
+		(a, b) => a.depth - b.depth,
+	);
 
 	ctx.lineWidth = lineWidth;
 
