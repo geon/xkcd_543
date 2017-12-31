@@ -37,14 +37,14 @@ interface TesselatedPath {
 	color: string;
 }
 
-const heartRightUpper = {
+const heartRightUpper: BezierCurve = {
 	a: { a: 1 / 2, b: 1 / 4, c: 1 / 4 },
 	b: { a: 13 / 20, b: 5 / 20, c: 2 / 20 },
 	c: { a: 6 / 10, b: 4 / 10, c: 0 },
 	d: { a: 1 / 2, b: 1 / 2, c: 0 },
 };
 
-const heartRightLower = {
+const heartRightLower: BezierCurve = {
 	a: { a: 1 / 2, b: 1 / 2, c: 0 },
 	b: { a: 4 / 10, b: 6 / 10, c: 0 },
 	c: { a: 3 / 16, b: 10 / 16, c: 3 / 16 },
