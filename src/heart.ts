@@ -40,7 +40,9 @@ interface TesselatedPath {
 const heartTopTouchTriangle: BarycentricCoord = { a: 1 / 2, b: 1 / 2, c: 0 };
 const topCorner: BarycentricCoord = { a: 1, b: 0, c: 0 };
 const rightCorner: BarycentricCoord = { a: 0, b: 1, c: 0 };
+const leftCorner: BarycentricCoord = { a: 0, b: 0, c: 1 };
 const heartFold: BarycentricCoord = { a: 1 / 2, b: 1 / 4, c: 1 / 4 };
+const heartPoint: BarycentricCoord = { a: 0, b: 1 / 2, c: 1 / 2 };
 const heartRightUpper: BezierCurve = {
 	a: heartFold,
 	b: interpolateBarycentric(heartFold, interpolateBarycentric(topCorner, rightCorner, 0.25), 0.6),
@@ -50,8 +52,8 @@ const heartRightUpper: BezierCurve = {
 const heartRightLower: BezierCurve = {
 	a: heartTopTouchTriangle,
 	b: interpolateBarycentric(heartTopTouchTriangle, rightCorner, 0.2),
-	c: { a: 3 / 16, b: 10 / 16, c: 3 / 16 },
-	d: { a: 0, b: 1 / 2, c: 1 / 2 },
+	c: interpolateBarycentric(interpolateBarycentric(topCorner, leftCorner, 0.5), rightCorner, 0.6),
+	d: heartPoint,
 };
 
 const heartInRightHalfBarycentricBezier = [
