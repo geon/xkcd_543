@@ -42,18 +42,26 @@ const topCorner: BarycentricCoord = { a: 1, b: 0, c: 0 };
 const rightCorner: BarycentricCoord = { a: 0, b: 1, c: 0 };
 const leftCorner: BarycentricCoord = { a: 0, b: 0, c: 1 };
 const heartFold: BarycentricCoord = { a: 1 / 2, b: 1 / 4, c: 1 / 4 };
-const heartPoint: BarycentricCoord = { a: 0, b: 1 / 2, c: 1 / 2 };
+const bottomMidpoint: BarycentricCoord = { a: 0, b: 1 / 2, c: 1 / 2 };
 const heartRightUpper: BezierCurve = {
 	a: heartFold,
-	b: interpolateBarycentric(heartFold, interpolateBarycentric(topCorner, rightCorner, 0.25), 0.6),
+	b: interpolateBarycentric(
+		heartFold,
+		interpolateBarycentric(topCorner, rightCorner, 0.25),
+		0.6,
+	),
 	c: interpolateBarycentric(heartTopTouchTriangle, topCorner, 0.2),
 	d: heartTopTouchTriangle,
 };
 const heartRightLower: BezierCurve = {
 	a: heartTopTouchTriangle,
 	b: interpolateBarycentric(heartTopTouchTriangle, rightCorner, 0.3),
-	c: interpolateBarycentric(interpolateBarycentric(topCorner, leftCorner, 0.6), rightCorner, 0.45),
-	d: heartPoint,
+	c: interpolateBarycentric(
+		interpolateBarycentric(topCorner, leftCorner, 0.6),
+		rightCorner,
+		0.45,
+	),
+	d: bottomMidpoint,
 };
 
 const heartInRightHalfBarycentricBezier = [
@@ -100,16 +108,16 @@ function splitBezierTriangle(
 ): { left: BezierTriangle; right: BezierTriangle } {
 	var centerLine = [
 		// Bottom midpoint.
-		evaluateBezierTriangle(bezierTriangle, { a: 0 / 2, b: 1 / 2, c: 1 / 2 }),
+		evaluateBezierTriangle(bezierTriangle, bottomMidpoint),
 		// Progressively closer to the top corner.
-		// Just arbitrary interpolated values picked because they look ok. (Just using 1/3 and 2/3 looks bad.)
-		// There's probably a correct mathy way to find the exact spots.
-		evaluateBezierTriangle(bezierTriangle, {
-			a: 18 / 64,
-			b: 23 / 64,
-			c: 23 / 64,
-		}),
-		evaluateBezierTriangle(bezierTriangle, { a: 3 / 5, b: 1 / 5, c: 1 / 5 }),
+		evaluateBezierTriangle(
+			bezierTriangle,
+			interpolateBarycentric(bottomMidpoint, topCorner, 1 / 3),
+		),
+		evaluateBezierTriangle(
+			bezierTriangle,
+			interpolateBarycentric(bottomMidpoint, topCorner, 2 / 3),
+		),
 	];
 
 	var barycentricCoordsOfRightHalfBottom = [
