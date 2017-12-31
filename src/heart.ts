@@ -2,6 +2,7 @@ type Coord = Array<number>; // 3 elements for barycentric.
 type Triangle = Array<Coord>;
 type BezierCurve = Array<Coord>; // 4 elements
 type Path = Array<BezierCurve>;
+type TesselatedPath = Array<Coord>;
 
 function vAdd(...vectors: Array<Coord>) {
 	var result = [0, 0];
@@ -101,63 +102,57 @@ function mirrorPath(path: Path) {
 	});
 }
 
-function drawSierpinskiHeart(
-	ctx: CanvasRenderingContext2D,
-	lineWidth: number,
+function tesselateSierpinskiHeart(
 	baseTriangleCartesian: Triangle,
 	heartInRightHalfBarycentricBezier: Path,
 	heartRightUpper: BezierCurve,
 	heartRightLower: BezierCurve,
 	bezierTriangle: Triangle,
 	depth: number,
-) {
+): Array<TesselatedPath> {
 	// Split the heart in left/right halves and draw both.
 
 	var halves = splitBezierTriangle(bezierTriangle);
 
-	drawHalfSierpinskiHeart(
-		ctx,
-		lineWidth,
-		baseTriangleCartesian,
-		heartInRightHalfBarycentricBezier,
-		heartRightUpper,
-		heartRightLower,
+	return [
+		...tesselateHalfSierpinskiHeart(
+			baseTriangleCartesian,
+			heartInRightHalfBarycentricBezier,
+			heartRightUpper,
+			heartRightLower,
 
-		halves.left,
-		depth,
-	);
-	drawHalfSierpinskiHeart(
-		ctx,
-		lineWidth,
-		baseTriangleCartesian,
-		heartInRightHalfBarycentricBezier,
-		heartRightUpper,
-		heartRightLower,
+			halves.left,
+			depth,
+		),
+		...tesselateHalfSierpinskiHeart(
+			baseTriangleCartesian,
+			heartInRightHalfBarycentricBezier,
+			heartRightUpper,
+			heartRightLower,
 
-		halves.right,
-		depth,
-	);
+			halves.right,
+			depth,
+		),
+	];
 }
 
-function drawHalfSierpinskiHeart(
-	ctx: CanvasRenderingContext2D,
-	lineWidth: number,
+function tesselateHalfSierpinskiHeart(
 	baseTriangleCartesian: Triangle,
 	heartInRightHalfBarycentricBezier: Path,
 	heartRightUpper: BezierCurve,
 	heartRightLower: BezierCurve,
 	halfBezierTriangle: Triangle,
 	depth: number,
-) {
-	drawPath(
-		ctx,
-		lineWidth,
-		baseTriangleCartesian,
-		transformPathByBezierTriangle(
-			halfBezierTriangle,
-			heartInRightHalfBarycentricBezier,
+): Array<TesselatedPath> {
+	let tesselated = [
+		tesselatePath(
+			transformPathByBezierTriangle(
+				halfBezierTriangle,
+				heartInRightHalfBarycentricBezier,
+			),
+			Math.max(1, Math.ceil(depth*2))
 		),
-	);
+	];
 
 	if (depth > 1) {
 		var heartRightUpperForHalf = heartRightUpper.map(makeRightHalf);
@@ -172,20 +167,6 @@ function drawHalfSierpinskiHeart(
 			interpolateBarycentric([1, 0, 0], heartRightUpperForHalf[0], 2 / 3),
 			interpolateBarycentric([1, 0, 0], heartRightUpperForHalf[0], 1 / 3),
 		];
-		drawHalfSierpinskiHeart(
-			ctx,
-			lineWidth,
-			baseTriangleCartesian,
-			heartInRightHalfBarycentricBezier,
-			heartRightUpper,
-			heartRightLower,
-
-			transformBezierTriangleByBezierTriangle(
-				halfBezierTriangle,
-				topHalfTriangle,
-			),
-			depth - 1,
-		);
 
 		var heartRightLowerForHalf = heartRightLower.map(makeRightHalf);
 		var lowerFullTriangle = [
@@ -199,39 +180,79 @@ function drawHalfSierpinskiHeart(
 			heartRightLowerForHalf[2],
 			heartRightLowerForHalf[1],
 		];
-		drawSierpinskiHeart(
-			ctx,
-			lineWidth,
-			baseTriangleCartesian,
-			heartInRightHalfBarycentricBezier,
-			heartRightUpper,
-			heartRightLower,
 
-			transformBezierTriangleByBezierTriangle(
-				halfBezierTriangle,
-				lowerFullTriangle,
+		tesselated = [
+			...tesselated,
+			...tesselateHalfSierpinskiHeart(
+				baseTriangleCartesian,
+				heartInRightHalfBarycentricBezier,
+				heartRightUpper,
+				heartRightLower,
+
+				transformBezierTriangleByBezierTriangle(
+					halfBezierTriangle,
+					topHalfTriangle,
+				),
+				depth - 1,
 			),
-			depth - 1,
-		);
+			...tesselateSierpinskiHeart(
+				baseTriangleCartesian,
+				heartInRightHalfBarycentricBezier,
+				heartRightUpper,
+				heartRightLower,
+
+				transformBezierTriangleByBezierTriangle(
+					halfBezierTriangle,
+					lowerFullTriangle,
+				),
+				depth - 1,
+			),
+		];
 	}
+
+	return tesselated;
 }
 
-function drawPath(
-	ctx: CanvasRenderingContext2D,
-	lineWidth: number,
-	baseTriangleCartesian: Triangle,
-	path: Path,
+function evaluateBezierCurve(
+	bezierCurve: BezierCurve,
+	interpolationFactor: number,
 ) {
-	ctx.strokeStyle = "red";
-	ctx.beginPath();
-	ctx.lineWidth = lineWidth;
-	pathBarycentricToCartesian(baseTriangleCartesian, path).forEach(function(
-		bezier,
-	) {
-		ctx.moveTo.apply(ctx, bezier[0]);
-		ctx.bezierCurveTo.apply(ctx, flatten(bezier.slice(1)));
-	});
-	ctx.stroke();
+	const a = interpolateBarycentric(
+		bezierCurve[0],
+		bezierCurve[1],
+		interpolationFactor,
+	);
+	const b = interpolateBarycentric(
+		bezierCurve[1],
+		bezierCurve[2],
+		interpolationFactor,
+	);
+	const c = interpolateBarycentric(
+		bezierCurve[2],
+		bezierCurve[3],
+		interpolationFactor,
+	);
+
+	const d = interpolateBarycentric(a, b, interpolationFactor);
+	const e = interpolateBarycentric(b, c, interpolationFactor);
+
+	return interpolateBarycentric(d, e, interpolationFactor);
+}
+
+function tesselatePath(path: Path, numSegments: number): TesselatedPath {
+
+	const coords = [];
+	// let coords = [] as Array<Coord>;
+	for (const curve of path) {
+		for (let i = 0; i <= numSegments; ++i) {
+			coords.push(evaluateBezierCurve(curve, i / numSegments));
+		}
+	}
+	// for (const curve of path) {
+	// 	coords = [...coords, ...curve];
+	// }
+
+	return coords;
 }
 
 function transformPathByBezierTriangle(bezierTriangle: Triangle, path: Path) {
@@ -431,9 +452,7 @@ function interpolateBarycentric(a: Coord, b: Coord, factor: number) {
 		[2 / 3, 0, 1 / 3],
 	];
 
-	drawSierpinskiHeart(
-		ctx,
-		lineWidth,
+	const tesselated = tesselateSierpinskiHeart(
 		baseTriangleCartesian,
 		heartInRightHalfBarycentricBezier,
 		heartRightUpper,
@@ -442,4 +461,21 @@ function interpolateBarycentric(a: Coord, b: Coord, factor: number) {
 		baseBezierTriangle,
 		7,
 	);
+
+	ctx.strokeStyle = "red";
+	ctx.lineWidth = lineWidth;
+	for (const path of tesselated) {
+		ctx.beginPath();
+		ctx.moveTo.apply(
+			ctx,
+			coordBarycentricToCartesian(baseTriangleCartesian, path[0]),
+		);
+		for (const coord of path.slice(1)) {
+			ctx.lineTo.apply(
+				ctx,
+				coordBarycentricToCartesian(baseTriangleCartesian, coord),
+			);
+		}
+		ctx.stroke();
+	}
 })();
