@@ -47,15 +47,15 @@ const heartRightUpper: BezierCurve = {
 	a: heartFold,
 	b: interpolateBarycentric(
 		heartFold,
-		interpolateBarycentric(topCorner, rightCorner, 0.25),
-		0.6,
+		interpolateBarycentric(topCorner, rightCorner, 0.3),
+		0.5,
 	),
-	c: interpolateBarycentric(heartTopTouchTriangle, topCorner, 0.2),
+	c: interpolateBarycentric(heartTopTouchTriangle, topCorner, 0.15),
 	d: heartTopTouchTriangle,
 };
 const heartRightLower: BezierCurve = {
 	a: heartTopTouchTriangle,
-	b: interpolateBarycentric(heartTopTouchTriangle, rightCorner, 0.3),
+	b: interpolateBarycentric(heartTopTouchTriangle, rightCorner, 0.35),
 	c: interpolateBarycentric(
 		interpolateBarycentric(topCorner, leftCorner, 0.6),
 		rightCorner,
