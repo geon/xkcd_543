@@ -7,8 +7,13 @@ interface CartesianCoord {
 	x: number;
 	y: number;
 }
-type BarycentricTriangle = Array<BarycentricCoord>;
-type CartesianTriangle = Array<CartesianCoord>;
+interface Triangle<TCoord> {
+	a: TCoord;
+	b: TCoord;
+	c: TCoord;
+}
+type BarycentricTriangle = Triangle<BarycentricCoord>;
+type CartesianTriangle = Triangle<CartesianCoord>;
 type BezierTriangle = Array<BarycentricCoord>;
 type BezierCurve = Array<BarycentricCoord>; // 4 elements
 type Path = Array<BezierCurve>;
@@ -35,12 +40,12 @@ function vsMul(v: CartesianCoord, s: number): CartesianCoord {
 
 function coordBarycentricToCartesian(
 	triangle: CartesianTriangle,
-	b: BarycentricCoord,
+	coord: BarycentricCoord,
 ): CartesianCoord {
 	return vAdd(
-		vsMul(triangle[0], b.a),
-		vsMul(triangle[1], b.b),
-		vsMul(triangle[2], b.c),
+		vsMul(triangle.a, coord.a),
+		vsMul(triangle.b, coord.b),
+		vsMul(triangle.c, coord.c),
 	);
 }
 
@@ -252,38 +257,38 @@ function tesselatePath(path: Path, numSegments: number): TesselatedPath {
 
 function evaluateBezierTriangle(
 	bezierTriangle: BezierTriangle,
-	b: BarycentricCoord,
-) {
+	coord: BarycentricCoord,
+): BarycentricCoord {
 	var subTriangles = makeSubTriangles(bezierTriangle);
 
 	return evaluateBarycentricTriangle(
-		[
-			evaluateBarycentricTriangle(
-				[
-					evaluateBarycentricTriangle(subTriangles[0], b),
-					evaluateBarycentricTriangle(subTriangles[1], b),
-					evaluateBarycentricTriangle(subTriangles[5], b),
-				],
-				b,
+		{
+			a: evaluateBarycentricTriangle(
+				{
+					a: evaluateBarycentricTriangle(subTriangles[0], coord),
+					b: evaluateBarycentricTriangle(subTriangles[1], coord),
+					c: evaluateBarycentricTriangle(subTriangles[5], coord),
+				},
+				coord,
 			),
-			evaluateBarycentricTriangle(
-				[
-					evaluateBarycentricTriangle(subTriangles[1], b),
-					evaluateBarycentricTriangle(subTriangles[2], b),
-					evaluateBarycentricTriangle(subTriangles[3], b),
-				],
-				b,
+			b: evaluateBarycentricTriangle(
+				{
+					a: evaluateBarycentricTriangle(subTriangles[1], coord),
+					b: evaluateBarycentricTriangle(subTriangles[2], coord),
+					c: evaluateBarycentricTriangle(subTriangles[3], coord),
+				},
+				coord,
 			),
-			evaluateBarycentricTriangle(
-				[
-					evaluateBarycentricTriangle(subTriangles[5], b),
-					evaluateBarycentricTriangle(subTriangles[3], b),
-					evaluateBarycentricTriangle(subTriangles[4], b),
-				],
-				b,
+			c: evaluateBarycentricTriangle(
+				{
+					a: evaluateBarycentricTriangle(subTriangles[5], coord),
+					b: evaluateBarycentricTriangle(subTriangles[3], coord),
+					c: evaluateBarycentricTriangle(subTriangles[4], coord),
+				},
+				coord,
 			),
-		],
-		b,
+		},
+		coord,
 	);
 }
 
@@ -300,12 +305,12 @@ function makeSubTriangles(
 	);
 
 	return [
-		[bezierTriangle[0], bezierTriangle[1], bezierTriangle[8]],
-		[bezierTriangle[1], bezierTriangle[2], center],
-		[bezierTriangle[2], bezierTriangle[3], bezierTriangle[4]],
-		[center, bezierTriangle[4], bezierTriangle[5]],
-		[bezierTriangle[7], bezierTriangle[5], bezierTriangle[6]],
-		[bezierTriangle[8], center, bezierTriangle[7]],
+		{ a: bezierTriangle[0], b: bezierTriangle[1], c: bezierTriangle[8] },
+		{ a: bezierTriangle[1], b: bezierTriangle[2], c: center },
+		{ a: bezierTriangle[2], b: bezierTriangle[3], c: bezierTriangle[4] },
+		{ a: center, b: bezierTriangle[4], c: bezierTriangle[5] },
+		{ a: bezierTriangle[7], b: bezierTriangle[5], c: bezierTriangle[6] },
+		{ a: bezierTriangle[8], b: center, c: bezierTriangle[7] },
 	];
 }
 
@@ -331,17 +336,17 @@ function evaluateBarycentricTriangle(
 ): BarycentricCoord {
 	return {
 		a:
-			triangle[0].a * coord.a +
-			triangle[1].a * coord.b +
-			triangle[2].a * coord.c,
+			triangle.a.a * coord.a +
+			triangle.b.a * coord.b +
+			triangle.c.a * coord.c,
 		b:
-			triangle[0].b * coord.a +
-			triangle[1].b * coord.b +
-			triangle[2].b * coord.c,
+			triangle.a.b * coord.a +
+			triangle.b.b * coord.b +
+			triangle.c.b * coord.c,
 		c:
-			triangle[0].c * coord.a +
-			triangle[1].c * coord.b +
-			triangle[2].c * coord.c,
+			triangle.a.c * coord.a +
+			triangle.b.c * coord.b +
+			triangle.c.c * coord.c,
 	};
 }
 
@@ -384,11 +389,11 @@ function interpolateBarycentric(
 			2 * lineWidth,
 	};
 	var margin = vsMul(vSub(canvasSize, triangleSize), 1 / 2);
-	var baseTriangleCartesian = [
-		vAdd(margin, { x: triangleSize.x / 2, y: 0 }),
-		vAdd(margin, { x: triangleSize.x, y: triangleSize.y }),
-		vAdd(margin, { x: 0, y: triangleSize.y }),
-	];
+	var baseTriangleCartesian = {
+		a: vAdd(margin, { x: triangleSize.x / 2, y: 0 }),
+		b: vAdd(margin, { x: triangleSize.x, y: triangleSize.y }),
+		c: vAdd(margin, { x: 0, y: triangleSize.y }),
+	};
 
 	var heartRightUpper = [
 		{ a: 1 / 2, b: 1 / 4, c: 1 / 4 },
