@@ -269,15 +269,12 @@ function tesselatePath(
 	numSegments: number,
 ): Array<BarycentricCoord> {
 	const coords = [];
-	// let coords = [] as Array<Coord>;
+
 	for (const curve of path) {
 		for (let i = 0; i <= numSegments; ++i) {
 			coords.push(evaluateBezierCurve(curve, i / numSegments));
 		}
 	}
-	// for (const curve of path) {
-	// 	coords = [...coords, ...curve];
-	// }
 
 	return coords;
 }
@@ -421,17 +418,6 @@ function interpolateBarycentric(
 		b: vAdd(margin, { x: triangleSize.x, y: triangleSize.y }),
 		c: vAdd(margin, { x: 0, y: triangleSize.y }),
 	};
-
-	// var heartBarycentricBezier = [
-	// 	heartRightUpper,
-	// 	heartRightLower,
-	// 	heartRightLower.map(mirrorBarycentric),
-	// 	heartRightUpper.map(mirrorBarycentric),
-	// ];
-
-	// var heartInLeftHalfBarycentricBezier = mirrorPath(
-	// 	heartInRightHalfBarycentricBezier,
-	// );
 
 	var baseBezierTriangle = {
 		a: { a: 1, b: 0, c: 0 },
