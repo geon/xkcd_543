@@ -442,21 +442,36 @@ function interpolateBarycentric(
 	const tesselated = tesselateSierpinskiHeart(baseBezierTriangle, 7);
 
 	ctx.lineWidth = lineWidth;
-	for (const path of tesselated) {
-		ctx.beginPath();
-		ctx.strokeStyle = path.color;
-		const coord = coordBarycentricToCartesian(
-			baseTriangleCartesian,
-			path.points[0],
-		);
-		ctx.moveTo(coord.x, coord.y);
-		for (const barycentricCoord of path.points.slice(1)) {
+
+	function* draw(): IterableIterator<void> {
+		for (const path of tesselated) {
+			ctx.beginPath();
+			ctx.strokeStyle = path.color;
 			const coord = coordBarycentricToCartesian(
 				baseTriangleCartesian,
-				barycentricCoord,
+				path.points[0],
 			);
-			ctx.lineTo(coord.x, coord.y);
+			ctx.moveTo(coord.x, coord.y);
+			for (const barycentricCoord of path.points.slice(1)) {
+				const coord = coordBarycentricToCartesian(
+					baseTriangleCartesian,
+					barycentricCoord,
+				);
+				ctx.lineTo(coord.x, coord.y);
+			}
+			ctx.stroke();
+			yield;
 		}
-		ctx.stroke();
 	}
+
+	const drawer = draw();
+
+	function loop() {
+		const next = drawer.next();
+		if (!next.done) {
+			requestAnimationFrame(loop);
+		}
+	}
+
+	loop();
 })();
