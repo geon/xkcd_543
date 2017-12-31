@@ -164,15 +164,22 @@ function tesselateSierpinskiHeart(
 	var halves = splitBezierTriangle(bezierTriangle);
 
 	return [
-		...tesselateHalfSierpinskiHeart(halves.left, depth),
-		...tesselateHalfSierpinskiHeart(halves.right, depth),
+		...tesselateHalfSierpinskiHeart(depth).map(tesselatedPath => ({
+			points: tesselatedPath.points.map(coord =>
+				evaluateBezierTriangle(halves.left, coord),
+			),
+			color: tesselatedPath.color,
+		})),
+		...tesselateHalfSierpinskiHeart(depth).map(tesselatedPath => ({
+			points: tesselatedPath.points.map(coord =>
+				evaluateBezierTriangle(halves.right, coord),
+			),
+			color: tesselatedPath.color,
+		})),
 	];
 }
 
-function tesselateHalfSierpinskiHeart(
-	halfBezierTriangle: BezierTriangle,
-	depth: number,
-): Array<TesselatedPath> {
+function tesselateHalfSierpinskiHeart(depth: number): Array<TesselatedPath> {
 	let tesselated = [
 		{
 			points: tesselatePath(
@@ -213,18 +220,18 @@ function tesselateHalfSierpinskiHeart(
 		};
 
 		tesselated = [
-			...tesselateHalfSierpinskiHeart(topHalfTriangle, depth - 1),
+			...tesselateHalfSierpinskiHeart(depth - 1).map(tesselatedPath => ({
+				points: tesselatedPath.points.map(coord =>
+					evaluateBezierTriangle(topHalfTriangle, coord),
+				),
+				color: tesselatedPath.color,
+			})),
 			...tesselateSierpinskiHeart(lowerFullTriangle, depth - 1),
 			...tesselated,
 		];
 	}
 
-	return tesselated.map(tesselatedPath => ({
-		points: tesselatedPath.points.map(coord =>
-			evaluateBezierTriangle(halfBezierTriangle, coord),
-		),
-		color: tesselatedPath.color,
-	}));
+	return tesselated;
 }
 
 function evaluateBezierCurve(
