@@ -11,7 +11,8 @@
     "build:clean": "rm -r dist",
     "build:webpack": "webpack",
     "build:html": "cp src/index.html dist/",
-    "build": "npm run build:clean && npm run build:webpack && npm run build:html"
+    "build": "npm run build:clean && npm run build:webpack && npm run build:html",
+    "publish": "npm run build && ./publish.sh"
 	},
   "author": "Victor Widell",
   "license": "ISC",
