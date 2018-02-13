@@ -8,7 +8,10 @@
 		"start": "webpack-dev-server",
 		"tsc": "tsc",
     "lint": "tslint -c tslint.json 'src/**/*.ts' -e 'src/**/*.d.ts' --fix",
-		"build": "rm -r dist && webpack && cp src/index.html dist/"
+    "build:clean": "rm -r dist",
+    "build:webpack": "webpack",
+    "build:html": "cp src/index.html dist/",
+    "build": "npm run build:clean && npm run build:webpack && npm run build:html"
 	},
   "author": "Victor Widell",
   "license": "ISC",
